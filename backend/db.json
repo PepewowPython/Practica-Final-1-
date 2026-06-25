@@ -1,0 +1,112 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Jean Crespo",
+      "email": "jean@correo.com",
+      "password": "$2a$10$X86Z9C4BqV1KkW/pIq7XreZ89f9oE2/aBw1oE96vS6g.4hG2L2jD2",
+      "phone": "3001234567",
+      "contacts": [
+        { "name": "Mamá", "phone": "3109876543" },
+        { "name": "Samuel Pérez", "phone": "3123456789" }
+      ]
+    }
+  ],
+  "incidents": [
+    {
+      "id": "inc-1",
+      "title": "Robo con arma blanca",
+      "type": "Hurto",
+      "description": "Me robaron el celular en la esquina del Parque Berrio a las 8:00 PM. Poca presencia de policías.",
+      "latitude": 6.2494,
+      "longitude": -75.5678,
+      "date": "2026-06-24T20:15:00.000Z",
+      "reportedBy": "Jean Crespo",
+      "status": "aprobado"
+    },
+    {
+      "id": "inc-2",
+      "title": "Calle sin alumbrado público",
+      "type": "Iluminación",
+      "description": "Toda la cuadra está a oscuras. Es muy peligroso transitar a pie después de las 6:30 PM.",
+      "latitude": 6.2452,
+      "longitude": -75.5864,
+      "date": "2026-06-25T01:30:00.000Z",
+      "reportedBy": "Samuel Pérez",
+      "status": "aprobado"
+    },
+    {
+      "id": "inc-3",
+      "title": "Sospechosos merodeando",
+      "type": "Sospechoso",
+      "description": "Dos personas en moto sin placas dando vueltas y observando a los peatones en los paraderos de buses.",
+      "latitude": 6.2085,
+      "longitude": -75.5662,
+      "date": "2026-06-25T07:00:00.000Z",
+      "reportedBy": "mamá",
+      "status": "aprobado"
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone-1",
+      "name": "Centro (San Antonio / Parque de Berrío)",
+      "level": "alto",
+      "color": "#840505",
+      "latitude": 6.2485,
+      "longitude": -75.5685,
+      "radius": 350,
+      "description": "Zona comercial de alta afluencia peatonal. Frecuentes reportes de cosquilleo y hurto."
+    },
+    {
+      "id": "zone-2",
+      "name": "Prado Centro",
+      "level": "alto",
+      "color": "#840505",
+      "latitude": 6.2575,
+      "longitude": -75.5625,
+      "radius": 300,
+      "description": "Zona residencial patrimonial con calles solitarias en las noches. Alto riesgo de robos."
+    },
+    {
+      "id": "zone-3",
+      "name": "Entorno Parque Lleras",
+      "level": "medio",
+      "color": "#F0C862",
+      "latitude": 6.2089,
+      "longitude": -75.5678,
+      "radius": 200,
+      "description": "Zona rosa y comercial. Precaución en horarios nocturnos debido a hurtos selectivos."
+    },
+    {
+      "id": "zone-4",
+      "name": "Terminal del Norte",
+      "level": "medio",
+      "color": "#F0C862",
+      "latitude": 6.2709,
+      "longitude": -75.5658,
+      "radius": 250,
+      "description": "Zona de transporte con paraderos oscuros. Precaución al abordar transporte público."
+    },
+    {
+      "id": "zone-5",
+      "name": "Campus Universidad de Antioquia",
+      "level": "bajo",
+      "color": "#518555",
+      "latitude": 6.2629,
+      "longitude": -75.5684,
+      "radius": 300,
+      "description": "Zona universitaria protegida y vigilada. Generalmente segura durante el día."
+    },
+    {
+      "id": "zone-6",
+      "name": "Parque de Laureles",
+      "level": "bajo",
+      "color": "#518555",
+      "latitude": 6.2464,
+      "longitude": -75.5898,
+      "radius": 150,
+      "description": "Zona segura con buena iluminación, cámaras de seguridad y patrullaje frecuente."
+    }
+  ]
+}
