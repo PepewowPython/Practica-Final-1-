@@ -1,0 +1,609 @@
+/* Custom Design System — Rutas Inseguras (Medellín, Colombia) */
+
+:root {
+  /* Colors */
+  --navy-primary: #072F71;
+  --maroon-danger: #840505;
+  --green-success: #518555;
+  --sun-warning: #F0C862;
+  --purple-info: #560B5A;
+  
+  --bg-white: #FFFFFF;
+  --bg-ice: #F5F7FA;
+  --text-dark: #111827;
+  --text-muted: #6B7280;
+  --border-light: #E5E7EB;
+  
+  /* Fonts */
+  --font-title: 'Outfit', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+  
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  color: var(--navy-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.125rem; color: var(--maroon-danger); }
+h4 { font-size: 1rem; color: var(--green-success); }
+
+/* ==========================================================================
+   Splash Screen
+   ========================================================================== */
+.splash-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--navy-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.splash-logo {
+  max-width: 180px;
+  margin-bottom: 24px;
+  animation: logo-fade-in 1s ease-out forwards;
+}
+
+.splash-slogan {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 1.2rem;
+  color: var(--sun-warning);
+  letter-spacing: 0.05em;
+  opacity: 0;
+  animation: slogan-fade-in 1.2s ease-out 0.5s forwards;
+}
+
+@keyframes logo-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slogan-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
+.navbar-custom {
+  background-color: var(--navy-primary);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  position: relative;
+}
+
+.navbar-brand-custom {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 12px;
+}
+
+.navbar-logo {
+  height: 38px;
+}
+
+.navbar-title {
+  color: var(--bg-white);
+  font-family: var(--font-title);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.search-box-container {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 20px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 16px 8px 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-white);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--navy-primary);
+  box-shadow: 0 0 0 3px rgba(7, 47, 113, 0.15);
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: var(--text-muted);
+}
+
+.nav-links-custom {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link-custom {
+  color: var(--bg-white);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.nav-link-custom:hover {
+  opacity: 1;
+  color: var(--sun-warning);
+}
+
+/* ==========================================================================
+   Buttons (Sistemas de Botones v1.0)
+   ========================================================================== */
+.btn-custom {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-custom:hover {
+  filter: brightness(0.9);
+}
+
+.btn-custom:active {
+  transform: scale(0.97);
+  filter: brightness(0.8);
+}
+
+.btn-custom:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sun-warning);
+}
+
+.btn-custom-sm {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}
+
+.btn-custom-lg {
+  padding: 16px 32px;
+  font-size: 1rem;
+}
+
+.btn-custom-primary {
+  background-color: var(--navy-primary);
+  color: var(--bg-white);
+}
+
+.btn-custom-danger {
+  background-color: var(--maroon-danger);
+  color: var(--bg-white);
+}
+
+.btn-custom-secondary {
+  background-color: var(--bg-white);
+  color: var(--navy-primary);
+  border: 1px solid var(--navy-primary);
+}
+
+.btn-custom-ghost {
+  background-color: transparent;
+  color: var(--green-success);
+  border: 1px solid var(--green-success);
+}
+
+.btn-custom-disabled {
+  background-color: var(--text-muted);
+  opacity: 0.4;
+  color: var(--bg-white);
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   App Layout & Map
+   ========================================================================== */
+.app-container {
+  display: flex;
+  height: calc(100vh - 60px);
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar-panel {
+  width: 360px;
+  background-color: var(--bg-ice);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  z-index: 10;
+  transition: transform 0.3s ease;
+}
+
+.map-container-wrapper {
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Floating instructions */
+.map-instructions {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-width: 300px;
+  border-left: 4px solid var(--navy-primary);
+  pointer-events: none;
+}
+
+/* Forms styling */
+.form-group-custom {
+  margin-bottom: var(--space-4);
+}
+
+.form-label-custom {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input-custom {
+  width: 100%;
+  height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+  font-size: 0.95rem;
+  outline: none;
+  background-color: var(--bg-white);
+  transition: all 0.2s;
+}
+
+.form-input-custom:focus {
+  border-color: var(--navy-primary);
+  box-shadow: 0 0 0 3px rgba(7, 47, 113, 0.15);
+}
+
+/* ==========================================================================
+   Incident & Risk Cards
+   ========================================================================== */
+.incident-card {
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+  border-left: 4px solid var(--text-muted);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.incident-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.incident-card.risk-alto {
+  border-left-color: var(--maroon-danger);
+}
+
+.incident-card.risk-medio {
+  border-left-color: var(--sun-warning);
+}
+
+.incident-card.risk-bajo {
+  border-left-color: var(--green-success);
+}
+
+.incident-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.badge-alto { background-color: rgba(132, 5, 5, 0.1); color: var(--maroon-danger); }
+.badge-medio { background-color: rgba(240, 200, 98, 0.15); color: #B38600; }
+.badge-bajo { background-color: rgba(81, 133, 85, 0.1); color: var(--green-success); }
+
+/* ==========================================================================
+   MercadoLibre Challenge Views (Styled in Rutas Inseguras)
+   ========================================================================== */
+.ml-results-container {
+  max-width: 1200px;
+  margin: var(--space-6) auto;
+  padding: 0 var(--space-4);
+}
+
+.ml-breadcrumb {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.ml-product-list {
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.ml-product-item {
+  display: flex;
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+}
+
+.ml-product-item:hover {
+  background-color: var(--bg-ice);
+}
+
+.ml-product-item:last-child {
+  border-bottom: none;
+}
+
+.ml-product-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  background-color: var(--bg-white);
+}
+
+.ml-product-info {
+  flex: 1;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+}
+
+.ml-product-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-3);
+}
+
+.ml-product-price {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--navy-primary);
+}
+
+.ml-shipping-badge {
+  color: var(--green-success);
+  display: inline-flex;
+  align-items: center;
+}
+
+.ml-product-title {
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-bottom: var(--space-2);
+  color: var(--text-dark);
+}
+
+.ml-product-location {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+/* Product Detail Page */
+.ml-detail-container {
+  max-width: 1000px;
+  margin: var(--space-6) auto;
+  padding: var(--space-5);
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.ml-detail-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.ml-detail-gallery {
+  flex: 1.2;
+  min-width: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-white);
+  padding: var(--space-4);
+  border-radius: 8px;
+}
+
+.ml-detail-img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.ml-detail-panel {
+  flex: 1;
+  min-width: 300px;
+  padding: var(--space-4);
+  border-left: 1px solid var(--border-light);
+}
+
+.ml-detail-condition {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.ml-detail-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+  color: var(--navy-primary);
+}
+
+.ml-detail-price {
+  font-family: var(--font-title);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: flex-start;
+}
+
+.ml-detail-price-decimals {
+  font-size: 1.1rem;
+  margin-top: 4px;
+  margin-left: 2px;
+}
+
+.ml-detail-description-section {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-light);
+}
+
+.ml-detail-description-title {
+  font-size: 1.3rem;
+  margin-bottom: var(--space-4);
+}
+
+.ml-detail-description-text {
+  font-size: 1rem;
+  color: var(--text-dark);
+  white-space: pre-line;
+  line-height: 1.7;
+}
+
+/* ==========================================================================
+   Responsive adaptions
+   ========================================================================== */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column-reverse;
+  }
+  
+  .sidebar-panel {
+    width: 100%;
+    height: 40%;
+  }
+  
+  .map-container-wrapper {
+    height: 60%;
+  }
+  
+  .navbar-custom {
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+  }
+  
+  .search-box-container {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .ml-product-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .ml-product-info {
+    padding-left: 0;
+    padding-top: var(--space-4);
+  }
+  
+  .ml-detail-panel {
+    border-left: none;
+    border-top: 1px solid var(--border-light);
+    padding-top: var(--space-5);
+  }
+}
