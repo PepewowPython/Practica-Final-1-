@@ -17,7 +17,7 @@ export default function SearchResults() {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`http://localhost:3001/api/items?q=${encodeURIComponent(query)}`);
+        const res = await axios.get(`http://localhost:5000/api/items?q=${encodeURIComponent(query)}`);
         setData(res.data);
       } catch (err) {
         console.error('Error fetching search results:', err);

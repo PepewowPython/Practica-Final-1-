@@ -39,8 +39,8 @@ export default function App() {
   const fetchMapData = async () => {
     try {
       const [incidentsRes, zonesRes] = await Promise.all([
-        axios.get('http://localhost:3001/api/incidents'),
-        axios.get('http://localhost:3001/api/zones')
+        axios.get('http://localhost:5000/api/incidents'),
+        axios.get('http://localhost:5000/api/zones')
       ]);
       setIncidents(incidentsRes.data);
       setZones(zonesRes.data);
@@ -82,7 +82,7 @@ export default function App() {
 
   const handleIncidentSubmit = async (newIncident) => {
     try {
-      const res = await axios.post('http://localhost:3001/api/incidents', newIncident);
+      const res = await axios.post('http://localhost:5000/api/incidents', newIncident);
       // Update list
       setIncidents(prev => [res.data, ...prev]);
       
@@ -104,7 +104,7 @@ export default function App() {
 
   const handleCalculateRoute = async (origin, destination) => {
     try {
-      const res = await axios.post('http://localhost:3001/api/routes', { origin, destination });
+      const res = await axios.post('http://localhost:5000/api/routes', { origin, destination });
       setRouteData(res.data);
     } catch (error) {
       console.error('Error calculating safe route:', error);

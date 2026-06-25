@@ -18,7 +18,7 @@ const DB_PATH = path.join(__dirname, 'db.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'rutas-inseguras-super-secret-key';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
