@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl, switchServer, getCurrentServer } from './config/apiConfig';
 
 // Import components
 import SplashScreen from './components/SplashScreen';
@@ -16,6 +17,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [zones, setZones] = useState([]);
+  const [currentServer, setCurrentServer] = useState(getCurrentServer());
   
   // Routing / Map states
   const [routeData, setRouteData] = useState(null);
@@ -38,15 +40,23 @@ export default function App() {
 
   const fetchMapData = async () => {
     try {
+      const apiUrl = getApiUrl();
       const [incidentsRes, zonesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/incidents'),
-        axios.get('http://localhost:5000/api/zones')
+        axios.get(`${apiUrl}/api/incidents`),
+        axios.get(`${apiUrl}/api/zones`)
       ]);
       setIncidents(incidentsRes.data);
       setZones(zonesRes.data);
     } catch (error) {
       console.error('Error fetching incidents/zones maps data:', error);
     }
+  };
+
+  // Handle server switch
+  const handleServerSwitch = (serverKey) => {
+    switchServer(serverKey);
+    setCurrentServer(getCurrentServer());
+    fetchMapData();
   };
 
   // Auth Handlers
@@ -82,7 +92,7 @@ export default function App() {
 
   const handleIncidentSubmit = async (newIncident) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/incidents', newIncident);
+      const res = await axios.post(`${getApiUrl()}/api/incidents`, newIncident);
       // Update list
       setIncidents(prev => [res.data, ...prev]);
       
@@ -104,7 +114,7 @@ export default function App() {
 
   const handleCalculateRoute = async (origin, destination) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/routes', { origin, destination });
+      const res = await axios.post(`${getApiUrl()}/api/routes`, { origin, destination });
       setRouteData(res.data);
     } catch (error) {
       console.error('Error calculating safe route:', error);
@@ -142,6 +152,8 @@ export default function App() {
         onOpenLogin={handleOpenLogin}
         onTriggerReportMode={handleTriggerReportMode}
         reportMode={reportMode}
+        currentServer={currentServer}
+        onServerSwitch={handleServerSwitch}
       />
 
       <Routes>

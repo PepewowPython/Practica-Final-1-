@@ -1,0 +1,121 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Jeremy Chica",
+      "email": "prueba@gmail.com",
+      "password": "$2a$10$S26ynEFctFDiYBRlWm4OX.EiqPF2Eos3MGp0tHxgCWBSuSL.ute5e",
+      "phone": "3126464292",
+      "contacts": [
+        { "name": "Emergency", "phone": "911" },
+        { "name": "Local Police", "phone": "311" }
+      ]
+    }
+  ],
+  "incidents": [
+    {
+      "id": "usa-inc-1",
+      "title": "Armed Robbery Downtown",
+      "type": "Hurto",
+      "description": "Robbery reported at Main Street and 5th Avenue. Suspect fled in black sedan. Police presence limited.",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "date": "2026-06-24T20:15:00.000Z",
+      "reportedBy": "John Smith",
+      "status": "aprobado",
+      "region": "New York"
+    },
+    {
+      "id": "usa-inc-2",
+      "title": "Street Lighting Out",
+      "type": "Iluminación",
+      "description": "Multiple street lights out in residential area. Very dangerous to walk at night. No repairs scheduled.",
+      "latitude": 34.0522,
+      "longitude": -118.2437,
+      "date": "2026-06-25T01:30:00.000Z",
+      "reportedBy": "Sarah Johnson",
+      "status": "aprobado",
+      "region": "Los Angeles"
+    },
+    {
+      "id": "usa-inc-3",
+      "title": "Suspicious Activity",
+      "type": "Sospechoso",
+      "description": "Two individuals on motorcycles circling the neighborhood watching pedestrians at bus stops.",
+      "latitude": 41.8781,
+      "longitude": -87.6298,
+      "date": "2026-06-25T07:00:00.000Z",
+      "reportedBy": "Michael Brown",
+      "status": "aprobado",
+      "region": "Chicago"
+    }
+  ],
+  "zones": [
+    {
+      "id": "usa-zone-1",
+      "name": "Downtown Manhattan",
+      "level": "alto",
+      "color": "#840505",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "radius": 500,
+      "description": "High foot traffic commercial area. Frequent reports of theft and robbery.",
+      "region": "New York"
+    },
+    {
+      "id": "usa-zone-2",
+      "name": "Downtown LA",
+      "level": "alto",
+      "color": "#840505",
+      "latitude": 34.0522,
+      "longitude": -118.2437,
+      "radius": 450,
+      "description": "Urban core with isolated streets at night. High risk for robberies.",
+      "region": "Los Angeles"
+    },
+    {
+      "id": "usa-zone-3",
+      "name": "Loop District",
+      "level": "medio",
+      "color": "#F0C862",
+      "latitude": 41.8781,
+      "longitude": -87.6298,
+      "radius": 400,
+      "description": "Commercial and entertainment district. Caution in late hours due to selective theft.",
+      "region": "Chicago"
+    },
+    {
+      "id": "usa-zone-4",
+      "name": "Union Station Area",
+      "level": "medio",
+      "color": "#F0C862",
+      "latitude": 38.8976,
+      "longitude": -77.0365,
+      "radius": 350,
+      "description": "Transportation hub with dark passages. Caution when boarding public transit.",
+      "region": "Washington DC"
+    },
+    {
+      "id": "usa-zone-5",
+      "name": "University District",
+      "level": "bajo",
+      "color": "#518555",
+      "latitude": 47.6550,
+      "longitude": -122.3035,
+      "radius": 400,
+      "description": "Protected campus area with good lighting and frequent patrols. Generally safe during day.",
+      "region": "Seattle"
+    },
+    {
+      "id": "usa-zone-6",
+      "name": "Central Park Area",
+      "level": "bajo",
+      "color": "#518555",
+      "latitude": 40.7829,
+      "longitude": -73.9654,
+      "radius": 300,
+      "description": "Safe area with good street lighting, security cameras and frequent patrols.",
+      "region": "New York"
+    }
+  ]
+}

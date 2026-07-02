@@ -16,7 +16,7 @@ export default function ProductDetail() {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`http://localhost:5000/api/items/${id}`);
+        const res = await axios.get(`${getApiUrl()}/api/items/${id}`);
         setData(res.data);
       } catch (err) {
         console.error('Error fetching product details:', err);

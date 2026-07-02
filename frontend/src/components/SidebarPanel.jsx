@@ -43,8 +43,8 @@ export default function SidebarPanel({
     setAuthError('');
     try {
       const url = isRegistering 
-        ? 'http://localhost:5000/api/auth/register' 
-        : 'http://localhost:5000/api/auth/login';
+? `${getApiUrl()}/api/auth/register`
+        : `${getApiUrl()}/api/auth/login`;
       
       const payload = isRegistering 
         ? { name: authName, email: authEmail, password: authPassword, phone: authPhone }
@@ -71,7 +71,7 @@ export default function SidebarPanel({
       const updatedContacts = [...(user.contacts || []), { name: newContactName, phone: newContactPhone }];
       
       const res = await axios.post(
-        'http://localhost:5000/api/auth/contacts', 
+        `${getApiUrl()}/api/auth/contacts`, 
         { contacts: updatedContacts },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -91,7 +91,7 @@ export default function SidebarPanel({
       const updatedContacts = user.contacts.filter((_, idx) => idx !== indexToDelete);
       
       const res = await axios.post(
-        'http://localhost:5000/api/auth/contacts', 
+        `${getApiUrl()}/api/auth/contacts`, 
         { contacts: updatedContacts },
         { headers: { Authorization: `Bearer ${token}` } }
       );

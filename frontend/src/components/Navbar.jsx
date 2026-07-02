@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, User, LogOut, ShieldAlert, Map } from 'lucide-react';
+import { Search, User, LogOut, ShieldAlert, Map, Globe } from 'lucide-react';
 
-export default function Navbar({ user, onLogout, onOpenLogin, onTriggerReportMode, reportMode }) {
+export default function Navbar({ user, onLogout, onOpenLogin, onTriggerReportMode, reportMode, currentServer, onServerSwitch }) {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,6 +50,22 @@ export default function Navbar({ user, onLogout, onOpenLogin, onTriggerReportMod
             {reportMode ? 'Haz clic en el Mapa...' : 'Reportar Inseguridad'}
           </button>
         )}
+
+        {/* Server Region Selector */}
+        <div className="dropdown d-inline">
+          <button className="btn-custom btn-custom-sm btn-custom-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style={{ padding: '6px 12px', fontSize: '12px' }} title="Seleccionar región del servidor">
+            <Globe size={14} className="me-1" /> {currentServer.flag} {currentServer.region}
+          </button>
+          <ul className="dropdown-menu shadow">
+            <li className="dropdown-header small">Selecciona una región:</li>
+            <li><button onClick={() => onServerSwitch('colombia')} className="dropdown-item d-flex align-items-center gap-2">
+              🇨🇴 Medellín, Colombia
+            </button></li>
+            <li><button onClick={() => onServerSwitch('usa')} className="dropdown-item d-flex align-items-center gap-2">
+              🇺🇸 USA Network
+            </button></li>
+          </ul>
+        </div>
 
         {user ? (
           <div className="dropdown d-inline">

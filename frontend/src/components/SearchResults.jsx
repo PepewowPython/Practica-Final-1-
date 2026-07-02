@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Truck, ArrowLeft, Loader2, MapPin, Clock, User, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
+import { getApiUrl } from '../config/apiConfig';
 
 export default function SearchResults({ incidents = [], searchType = 'items' }) {
   const [searchParams] = useSearchParams();
@@ -35,7 +36,7 @@ export default function SearchResults({ incidents = [], searchType = 'items' }) 
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`http://localhost:5000/api/items?q=${encodeURIComponent(query)}`);
+        const res = await axios.get(`${getApiUrl()}/api/items?q=${encodeURIComponent(query)}`);
         setData(res.data);
       } catch (err) {
         console.error('Error fetching search results:', err);
