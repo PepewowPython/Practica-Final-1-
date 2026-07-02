@@ -2,10 +2,10 @@
   "users": [
     {
       "id": "1",
-      "name": "Jean Crespo",
-      "email": "jean@correo.com",
-      "password": "$2a$10$X86Z9C4BqV1KkW/pIq7XreZ89f9oE2/aBw1oE96vS6g.4hG2L2jD2",
-      "phone": "3001234567",
+      "name": "Jeremy Chica",
+      "email": "prueba@gmail.com",
+      "password": "$2a$10$S26ynEFctFDiYBRlWm4OX.EiqPF2Eos3MGp0tHxgCWBSuSL.ute5e",
+      "phone": "3126464292",
       "contacts": [
         { "name": "Mamá", "phone": "3109876543" },
         { "name": "Samuel Pérez", "phone": "3123456789" }

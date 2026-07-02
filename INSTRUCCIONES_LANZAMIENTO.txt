@@ -1,0 +1,181 @@
+================================================================================
+                    RUTAS INSEGURAS - INSTRUCCIONES DE LANZAMIENTO
+                     Plataforma de Movilidad Segura en Medellín
+================================================================================
+
+📋 REQUISITOS PREVIOS
+================================================================================
+- Node.js v24.16.0 (o superior)
+- npm (incluido con Node.js)
+- Navegador web moderno (Chrome, Firefox, Safari, Edge)
+- Terminal/Consola
+
+🚀 PASOS PARA LANZAR LA APLICACIÓN
+================================================================================
+
+PASO 1: Instalar dependencias (UNA SOLA VEZ)
+--------------------------------------------------
+Abre una terminal en la carpeta raíz del proyecto y ejecuta:
+
+    npm install
+
+Este comando instalará todas las dependencias del proyecto (frontend y backend).
+
+
+PASO 2: Iniciar el servidor backend
+--------------------------------------------------
+En la terminal, ejecuta:
+
+    npm run server
+
+Esperado: Verás el mensaje "Backend server running on http://localhost:5000"
+
+⚠️  IMPORTANTE: Deja esta terminal abierta. El servidor backend debe estar 
+ejecutándose en segundo plano.
+
+
+PASO 3: Iniciar el servidor frontend (EN OTRA TERMINAL)
+--------------------------------------------------
+Abre UNA NUEVA TERMINAL en la carpeta raíz del proyecto y ejecuta:
+
+    npm run dev
+
+Esperado: Verás el mensaje "VITE v8.1.0  ready in XX ms" y una URL 
+como "http://localhost:5173/"
+
+
+PASO 4: Abrir la aplicación en el navegador
+--------------------------------------------------
+Abre tu navegador web (Chrome, Firefox, etc.) y ve a:
+
+    http://localhost:5173/
+
+¡La aplicación "Rutas Inseguras" debería cargarse ahora!
+
+
+📝 CREDENCIALES DE PRUEBA
+================================================================================
+
+OPCIÓN 1: Usar cuenta existente (RECOMENDADA)
+--------------------------------------------------
+Email:        prueba@gmail.com
+Contraseña:   Prueba123!
+Nombre:       Jeremy Chica
+Teléfono:     3126464292
+
+
+OPCIÓN 2: Crear una nueva cuenta de prueba
+--------------------------------------------------
+1. En la aplicación, haz clic en "Iniciar Sesión" (esquina superior derecha)
+2. Haz clic en "¿No tienes cuenta? Regístrate"
+3. Completa el formulario con datos personalizados
+4. Haz clic en "Registrarse"
+5. Ahora puedes iniciar sesión con tus datos
+
+
+✨ CARACTERÍSTICAS PRINCIPALES
+================================================================================
+
+🗺️  MAPA INTERACTIVO
+   - Visualiza zonas de riesgo en Medellín
+   - Rojo (Alto), Amarillo (Medio), Verde (Bajo)
+   - Haz clic en marcadores para ver detalles de incidentes
+
+📍 CALCULAR RUTAS SEGURAS
+   - Ingresa origen y destino (ej: "UdeA" a "Parque Lleras")
+   - Sistema calcula rutas reales usando OSRM
+   - Análisis de tráfico dinámico (rush hours, horarios nocturnos)
+   - Evaluación de seguridad por proximidad a incidentes
+
+🔍 BUSCAR INCIDENTES
+   - Barra de búsqueda en la parte superior
+   - Busca por tipo (Hurto, Iluminación, Sospechoso)
+   - Busca por descripción o zona
+   - Filtra incidentes en tiempo real
+
+📢 REPORTAR INCIDENTES
+   - Haz clic en "Reportar Inseguridad"
+   - Completa formulario con detalles del incidente
+   - Ubicación se captura automáticamente en el mapa
+   - Aporta a la comunidad de usuarios
+
+👤 CUENTA Y CONFIGURACIÓN
+   - Panel "Acceso" en la barra lateral
+   - Visualiza tus datos de perfil
+   - Ver información de emergencia
+
+
+🛑 SOLUCIÓN DE PROBLEMAS
+================================================================================
+
+❌ Error: "No se puede conectar al servidor backend"
+   ✓ Verifica que ejecutaste "npm run server" en una terminal
+   ✓ Asegúrate que el puerto 5000 no esté en uso
+   ✓ Cierra y reinicia ambos servidores
+
+❌ Error: "Página no encontrada" al abrir http://localhost:5173/
+   ✓ Verifica que ejecutaste "npm run dev" en otra terminal
+   ✓ Espera a que Vite termine de compilar (2-3 segundos)
+   ✓ Recarga la página (F5 o Cmd+R)
+
+❌ Las rutas no se calculan
+   ✓ Verifica que ingresaste ubicaciones válidas
+   ✓ Los nombres deben coincidir con landmarks conocidos de Medellín
+   ✓ Ejemplos válidos: "UdeA", "Parque Lleras", "Laureles", "El Poblado"
+
+❌ No aparecen incidentes en el mapa
+   ✓ Verifica que el backend está ejecutándose
+   ✓ Abre el navegador y ve a http://localhost:5000/api/incidents
+   ✓ Deberías ver datos en formato JSON
+
+
+🌐 UBICACIONES VÁLIDAS PARA PRUEBAS
+================================================================================
+
+Puedes usar estos landmarks para calcular rutas:
+
+   • UdeA (Universidad de Antioquia)
+   • Parque Lleras
+   • Laureles
+   • El Poblado
+   • Centro Comercial Premium
+   • Parque de la Milagrosa
+   • Pedregal
+   • Terminal del Norte
+   • Terminal del Sur
+
+
+⏹️  DETENER LA APLICACIÓN
+================================================================================
+
+Para detener los servidores:
+
+1. En la terminal del backend: presiona Ctrl+C
+2. En la terminal del frontend: presiona Ctrl+C
+3. Cierra el navegador
+
+Cuando quieras volver a lanzar, repite los pasos 2, 3 y 4.
+
+
+💡 RECOMENDACIONES
+================================================================================
+
+• Usa Chrome o Firefox para mejor compatibilidad
+• Mantén la consola de desarrollador abierta (F12) para ver errores
+• Los datos se guardan en backend/db.json (archivo JSON local)
+• Abre una terminal por cada servidor (no en la misma terminal)
+
+
+📞 CONTACTO Y SOPORTE
+================================================================================
+
+Para problemas técnicos:
+1. Verifica que todos los pasos se completaron correctamente
+2. Reinicia ambos servidores
+3. Borra node_modules y ejecuta "npm install" nuevamente
+4. Consulta los logs en la consola del navegador (F12)
+
+
+================================================================================
+                          ¡Disfruta usando Rutas Inseguras!
+================================================================================

@@ -207,26 +207,88 @@ export default function SidebarPanel({
               </div>
             )}
 
-            {/* Route calculations info */}
+            {/* Route calculations info with traffic analysis */}
             {routeData && (
               <div className="bg-white p-3 rounded shadow-sm border-left-navy animate-fade-in">
-                <h6 className="font-weight-bold text-primary-navy d-flex align-items-center gap-1">
-                  <Navigation size={16} /> Resultados del Análisis
-                </h6>
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <h6 className="font-weight-bold text-primary-navy d-flex align-items-center gap-1 m-0">
+                    <Navigation size={16} /> Análisis de Ruta
+                  </h6>
+                  <span style={{ fontSize: '20px' }}>{routeData.safeTrafficIcon}</span>
+                </div>
                 <hr className="my-2" />
                 
-                <div className="mb-2">
-                  <span className="d-block small text-muted">Ruta Recomendada (Continua Navy):</span>
-                  <span className="badge badge-bajo">Riesgo {routeData.safeRiskScore}</span>
+                {/* Recomendación */}
+                <div className="alert alert-info p-2 mb-3 small" style={{ backgroundColor: '#e3f2fd', borderLeft: '3px solid #1976d2' }}>
+                  <strong>✓ {routeData.recommendation}</strong><br/>
+                  <span className="text-muted" style={{ fontSize: '12px' }}>Razón: {routeData.recommendationReason}</span>
                 </div>
-                <div className="mb-2">
-                  <span className="d-block small text-muted">Ruta Alternativa (Punteada Verde):</span>
-                  <span className="badge badge-medio">Riesgo {routeData.altRiskScore}</span>
+
+                {/* Ruta Segura (Primaria) */}
+                <div className="mb-3 p-2 rounded" style={{ backgroundColor: '#f5f5f5', borderLeft: '4px solid var(--navy-primary)' }}>
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h6 className="m-0 text-primary-navy">Ruta Segura</h6>
+                    <span className="badge badge-bajo">Riesgo {routeData.safeRiskScore}</span>
+                  </div>
+                  <div className="row g-2 small mb-2">
+                    <div className="col-6">
+                      <div className="text-muted" style={{ fontSize: '11px' }}>Distancia</div>
+                      <strong className="text-dark">{routeData.safeRouteDistance} km</strong>
+                    </div>
+                    <div className="col-6">
+                      <div className="text-muted" style={{ fontSize: '11px' }}>Tiempo</div>
+                      <strong className="text-dark">{routeData.safeRouteDurationText}</strong>
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span style={{ fontSize: '18px' }}>{routeData.safeTrafficIcon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div className="text-muted small m-0">Tráfico</div>
+                      <strong className="text-dark" style={{ color: routeData.safeTrafficColor }}>
+                        {routeData.safeTrafficStatus}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
-                
-                <p className="small text-dark mt-3 mb-0" style={{ lineHeight: '1.4' }}>
-                  {routeData.description}
-                </p>
+
+                {/* Ruta Alternativa */}
+                <div className="mb-3 p-2 rounded" style={{ backgroundColor: '#f5f5f5', borderLeft: '4px solid #00AA00' }}>
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h6 className="m-0" style={{ color: '#00AA00' }}>Ruta Alternativa</h6>
+                    <span className={`badge ${routeData.altRiskScore === 'Bajo' ? 'badge-bajo' : routeData.altRiskScore === 'Medio' ? 'badge-medio' : 'badge-alto'}`}>
+                      Riesgo {routeData.altRiskScore}
+                    </span>
+                  </div>
+                  <div className="row g-2 small mb-2">
+                    <div className="col-6">
+                      <div className="text-muted" style={{ fontSize: '11px' }}>Distancia</div>
+                      <strong className="text-dark">{routeData.altRouteDistance} km</strong>
+                    </div>
+                    <div className="col-6">
+                      <div className="text-muted" style={{ fontSize: '11px' }}>Tiempo</div>
+                      <strong className="text-dark">{routeData.altRouteDurationText}</strong>
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span style={{ fontSize: '18px' }}>{routeData.altTrafficIcon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div className="text-muted small m-0">Tráfico</div>
+                      <strong className="text-dark" style={{ color: routeData.altTrafficColor }}>
+                        {routeData.altTrafficStatus}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estado del Tráfico General */}
+                <div className="border-top pt-2 mt-2 small">
+                  <div className="text-muted mb-1">
+                    <strong>Estado general del tráfico:</strong> {routeData.trafficConditions}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '11px' }}>
+                    🕐 Calculado a las {new Date(routeData.calculatedAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
               </div>
             )}
           </div>

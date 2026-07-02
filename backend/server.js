@@ -191,113 +191,271 @@ app.get('/api/zones', async (req, res) => {
 });
 
 // ==========================================
-// ROUTE CALCULATION (MOCKED FOR MEDELLIN)
+// ROUTE CALCULATION WITH TRAFFIC ANALYSIS
 // ==========================================
 
-app.post('/api/routes', (req, res) => {
-  const { origin, destination } = req.body;
+// Helper: Calculate traffic multiplier based on time of day and zones
+function calculateTrafficMultiplier(hour, dayOfWeek) {
+  // Rush hours: 7-9am, 12-1pm, 5-7pm
+  const rushHours = [7, 8, 12, 17, 18];
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
   
-  if (!origin || !destination) {
-    return res.status(400).json({ error: 'Se requiere origen y destino' });
+  if (isWeekday && rushHours.includes(hour)) {
+    return 1.5; // 50% slower
+  } else if (isWeekday && ((hour >= 6 && hour <= 10) || (hour >= 11 && hour <= 13) || (hour >= 16 && hour <= 20))) {
+    return 1.3; // 30% slower
+  } else if (hour >= 21 || hour <= 5) {
+    return 0.9; // 10% faster at night
   }
+  return 1.0; // Normal traffic
+}
 
-  // Predefined routes for nice demos
-  const presetKey = `${origin.toLowerCase().trim()}_to_${destination.toLowerCase().trim()}`;
-  const reversePresetKey = `${destination.toLowerCase().trim()}_to_${origin.toLowerCase().trim()}`;
+// Helper: Calculate security risk for a coordinate based on incidents database
+async function calculateSecurityRisk(latitude, longitude, incidents, zones) {
+  let riskScore = 0;
+  let nearbyIncidents = [];
+  
+  // Check proximity to incidents (within 0.01 degrees ≈ 1 km)
+  incidents.forEach(incident => {
+    const distance = Math.sqrt(
+      Math.pow(incident.latitude - latitude, 2) + 
+      Math.pow(incident.longitude - longitude, 2)
+    );
+    if (distance < 0.01) {
+      nearbyIncidents.push(incident);
+      riskScore += 2;
+    }
+  });
+  
+  // Check proximity to high-risk zones
+  zones.forEach(zone => {
+    const distance = Math.sqrt(
+      Math.pow(zone.latitude - latitude, 2) + 
+      Math.pow(zone.longitude - longitude, 2)
+    );
+    const radiusInDegrees = zone.radius / 111000; // Convert meters to degrees
+    
+    if (distance < radiusInDegrees) {
+      if (zone.level === 'alto') riskScore += 3;
+      if (zone.level === 'medio') riskScore += 1.5;
+    }
+  });
+  
+  return { riskScore, nearbyIncidents };
+}
 
-  // UdeA <-> Parque Lleras
-  const udeaToLlerasRoute = {
-    safeRoute: [
-      [6.2629, -75.5684], // UdeA
-      [6.2575, -75.5695], // Carabobo
-      [6.2505, -75.5702], // Plaza Cisneros / San Juan (safe side)
-      [6.2422, -75.5715], // Exposiciones
-      [6.2305, -75.5750], // Industriales
-      [6.2201, -75.5720], // Poblado Metro
-      [6.2105, -75.5705], // Calle 10
-      [6.2089, -75.5678]  // Parque Lleras
+// Helper: Calculate route security and traffic scores
+async function analyzeRoute(coordinates, incidents, zones) {
+  let totalRisk = 0;
+  let securityIncidents = [];
+  
+  for (const coord of coordinates) {
+    const { riskScore, nearbyIncidents } = await calculateSecurityRisk(coord[0], coord[1], incidents, zones);
+    totalRisk += riskScore;
+    securityIncidents.push(...nearbyIncidents);
+  }
+  
+  const avgRisk = totalRisk / coordinates.length;
+  
+  let securityLevel = 'Bajo';
+  if (avgRisk > 5) securityLevel = 'Alto';
+  else if (avgRisk > 2.5) securityLevel = 'Medio';
+  
+  return { securityLevel, avgRisk, securityIncidents };
+}
+
+// Helper: Get route from OSRM
+async function getRouteFromOSRM(originCoords, destCoords) {
+  try {
+    // Validate coordinates are within reasonable bounds
+    if (!originCoords || !destCoords || originCoords.length < 2 || destCoords.length < 2) {
+      console.error('Invalid coordinates format');
+      return null;
+    }
+
+    const url = `http://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`;
+    const response = await axios.get(url, { timeout: 5000 });
+    
+    if (response.data && response.data.routes && response.data.routes.length > 0) {
+      const route = response.data.routes[0];
+      const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert to [lat, lng]
+      const distance = route.distance / 1000; // Convert to km
+      const duration = route.duration / 60; // Convert to minutes
+      
+      return { coordinates, distance, duration };
+    } else if (response.data && response.data.code === 'NoRoute') {
+      console.warn('OSRM: No route found between coordinates');
+      return null;
+    }
+  } catch (error) {
+    console.error('OSRM API error:', error.message);
+  }
+  return null;
+}
+
+// Helper: Generate fallback route (straight line with intermediate points)
+function generateFallbackRoute(originCoords, destCoords, distance = 5, duration = 10) {
+  const midLat1 = originCoords[0] + (destCoords[0] - originCoords[0]) * 0.33;
+  const midLon1 = originCoords[1] + (destCoords[1] - originCoords[1]) * 0.33;
+  const midLat2 = originCoords[0] + (destCoords[0] - originCoords[0]) * 0.66;
+  const midLon2 = originCoords[1] + (destCoords[1] - originCoords[1]) * 0.66;
+  
+  return {
+    coordinates: [
+      originCoords,
+      [midLat1, midLon1],
+      [midLat2, midLon2],
+      destCoords
     ],
-    altRoute: [
-      [6.2629, -75.5684], // UdeA
-      [6.2612, -75.5620], // El Bosque
-      [6.2500, -75.5580], // Avenida Oriental (more active/incidents)
-      [6.2380, -75.5600], // Av El Poblado
-      [6.2250, -75.5630], // San Diego
-      [6.2150, -75.5650], // Manila
-      [6.2089, -75.5678]  // Parque Lleras
-    ],
-    safeRiskScore: 'Bajo',
-    altRiskScore: 'Medio',
-    description: 'La ruta segura evita el centro de la ciudad transitando por ciclorrutas vigiladas del río y estaciones del Metro. La ruta alternativa va por la Avenida Oriental que presenta mayor índice de hurtos nocturnos.'
+    distance,
+    duration
   };
+}
 
-  // Laureles <-> Poblado
-  const laurelesToPobladoRoute = {
-    safeRoute: [
-      [6.2464, -75.5898], // Laureles Parque 1
-      [6.2440, -75.5810], // Unicentro
-      [6.2385, -75.5750], // Cerro Nutibara (safe bypass)
-      [6.2305, -75.5750], // Industriales
-      [6.2201, -75.5720], // Poblado Metro
-      [6.2166, -75.5714]  // Poblado
-    ],
-    altRoute: [
-      [6.2464, -75.5898], // Laureles Parque 1
-      [6.2425, -75.5940], // Calle 33
-      [6.2350, -75.5880], // Av 80
-      [6.2200, -75.5820], // Belén (horario nocturno sensible)
-      [6.2120, -75.5740], // Puente Gilberto Echeverri
-      [6.2166, -75.5714]  // Poblado
-    ],
-    safeRiskScore: 'Bajo',
-    altRiskScore: 'Medio',
-    description: 'La ruta segura atraviesa la calle 30E y conecta directo con el puente de Industriales, zona iluminada. El trayecto alternativo usa la Av 80 y Belén, presentando tramos oscuros cerca al puente.'
+// Helper: Address to coordinates (basic Medellin landmark mapping)
+async function addressToCoordinates(address) {
+  const landmarks = {
+    'universidad de antioquia': [6.2629, -75.5684],
+    'udea': [6.2629, -75.5684],
+    'parque lleras': [6.2089, -75.5678],
+    'lleras': [6.2089, -75.5678],
+    'parque de la milagrosa': [6.2453, -75.5851],
+    'milagrosa': [6.2453, -75.5851],
+    'pedregal': [6.2104, -75.5683],
+    'laureles': [6.2464, -75.5898],
+    'parque arvi': [6.2659, -75.5475],
+    'centro comercial': [6.2485, -75.5685],
+    'centro': [6.2485, -75.5685],
+    'medellín': [6.2442, -75.5812],
+    'medellin': [6.2442, -75.5812],
+    'envigado': [6.1835, -75.5854],
+    'poblado': [6.2166, -75.5714],
+    'el poblado': [6.2166, -75.5714],
+    'terminal norte': [6.2709, -75.5658],
+    'terminal': [6.2709, -75.5658],
+    'bello': [6.3305, -75.5267],
+    'itagui': [6.1738, -75.5813],
+    'itagüí': [6.1738, -75.5813],
+    'sabaneta': [6.1631, -75.5899]
   };
+  
+  const normalized = address.toLowerCase().trim();
+  for (const [key, coords] of Object.entries(landmarks)) {
+    if (normalized.includes(key)) {
+      return coords;
+    }
+  }
+  
+  // Default to Medellín center with small random variation
+  return [6.2442, -75.5812];
+}
 
-  let routeData;
+app.post('/api/routes', async (req, res) => {
+  try {
+    const { origin, destination } = req.body;
+    
+    if (!origin || !destination) {
+      return res.status(400).json({ error: 'Se requiere origen y destino' });
+    }
 
-  if (presetKey.includes('udea') && presetKey.includes('lleras') || reversePresetKey.includes('udea') && reversePresetKey.includes('lleras')) {
-    routeData = udeaToLlerasRoute;
-  } else if (presetKey.includes('laureles') && presetKey.includes('poblado') || reversePresetKey.includes('laureles') && reversePresetKey.includes('poblado')) {
-    routeData = laurelesToPobladoRoute;
-  } else {
-    // Generate a fallback routing dynamically between any two coordinates/addresses
-    // Coordinates default to Medellin boundary
-    const latO = 6.2442 + (Math.random() - 0.5) * 0.04;
-    const lonO = -75.5812 + (Math.random() - 0.5) * 0.04;
-    const latD = 6.2442 + (Math.random() - 0.5) * 0.04;
-    const lonD = -75.5812 + (Math.random() - 0.5) * 0.04;
+    // Get coordinates for origin and destination
+    const originCoords = await addressToCoordinates(origin);
+    const destCoords = await addressToCoordinates(destination);
 
-    const midLat1 = latO + (latD - latO) * 0.33 + (Math.random() - 0.5) * 0.008;
-    const midLon1 = lonO + (lonD - lonO) * 0.33 + (Math.random() - 0.5) * 0.008;
-    const midLat2 = latO + (latD - latO) * 0.66 + (Math.random() - 0.5) * 0.008;
-    const midLon2 = lonO + (lonD - lonO) * 0.66 + (Math.random() - 0.5) * 0.008;
+    // Get database
+    const db = await readDB();
+    const now = new Date();
+    const hour = now.getHours();
+    const dayOfWeek = now.getDay();
+    
+    // Get routes from OSRM, with fallback
+    let primaryRoute = await getRouteFromOSRM(originCoords, destCoords);
+    if (!primaryRoute) {
+      console.log('OSRM failed for primary route, using fallback');
+      primaryRoute = generateFallbackRoute(originCoords, destCoords);
+    }
+    
+    // Generate alternative route slightly different
+    const altOrigin = [originCoords[0] + (Math.random() - 0.5) * 0.015, originCoords[1] + (Math.random() - 0.5) * 0.015];
+    let altRoute = await getRouteFromOSRM(altOrigin, destCoords);
+    if (!altRoute) {
+      console.log('OSRM failed for alt route, using fallback');
+      altRoute = generateFallbackRoute(altOrigin, destCoords, primaryRoute.distance * 1.05, primaryRoute.duration * 1.07);
+    }
 
-    const altMidLat1 = latO + (latD - latO) * 0.33 + (Math.random() - 0.5) * 0.02;
-    const altMidLon1 = lonO + (lonD - lonO) * 0.33 + (Math.random() - 0.5) * 0.02;
-    const altMidLat2 = latO + (latD - latO) * 0.66 + (Math.random() - 0.5) * 0.02;
-    const altMidLon2 = lonO + (lonD - lonO) * 0.66 + (Math.random() - 0.5) * 0.02;
+    // Calculate traffic impact
+    const trafficMultiplier = calculateTrafficMultiplier(hour, dayOfWeek);
+    
+    // Analyze security for both routes
+    const primarySecurity = await analyzeRoute(primaryRoute.coordinates, db.incidents, db.zones);
+    const altSecurity = await analyzeRoute(altRoute.coordinates, db.incidents, db.zones);
 
-    routeData = {
-      safeRoute: [
-        [latO, lonO],
-        [midLat1, midLon1],
-        [midLat2, midLon2],
-        [latD, lonD]
-      ],
-      altRoute: [
-        [latO, lonO],
-        [altMidLat1, altMidLon1],
-        [altMidLat2, altMidLon2],
-        [latD, lonD]
-      ],
-      safeRiskScore: 'Bajo',
-      altRiskScore: 'Alto',
-      description: `Ruta calculada dinámicamente desde ${origin} hasta ${destination}. El camino primario busca vías principales iluminadas, mientras que el alternativo cruza sectores comerciales con historial de hurtos.`
+    // Calculate final times with traffic
+    const primaryTime = Math.round(primaryRoute.duration * trafficMultiplier);
+    const altTime = Math.round(altRoute.duration * trafficMultiplier);
+
+    // Determine traffic status
+    const getTrafficStatus = (multiplier) => {
+      if (multiplier >= 1.4) return { status: 'Alto', color: '#FF0000', icon: '🔴' };
+      if (multiplier >= 1.2) return { status: 'Medio', color: '#FFA500', icon: '🟠' };
+      return { status: 'Bajo', color: '#00AA00', icon: '🟢' };
     };
-  }
 
-  res.json(routeData);
+    const primaryTraffic = getTrafficStatus(trafficMultiplier);
+    const altTraffic = getTrafficStatus(trafficMultiplier);
+
+    // Recommend best route
+    let recommendation = 'primary';
+    let recommendationReason = '';
+    
+    if (primarySecurity.securityLevel === 'Alto' && altSecurity.securityLevel !== 'Alto') {
+      recommendation = 'alternative';
+      recommendationReason = 'Mejor seguridad';
+    } else if (primaryTime > altTime + 5) {
+      recommendation = 'alternative';
+      recommendationReason = 'Más rápida';
+    } else {
+      recommendationReason = 'Mejor balance seguridad-tráfico';
+    }
+
+    // Format response
+    const response = {
+      origin,
+      destination,
+      calculatedAt: new Date().toISOString(),
+      trafficConditions: primaryTraffic.status,
+      hour,
+      
+      safeRoute: primaryRoute.coordinates,
+      safeRouteDistance: parseFloat(primaryRoute.distance.toFixed(2)),
+      safeRouteDuration: primaryTime,
+      safeRouteDurationText: `${Math.floor(primaryTime / 60)}h ${primaryTime % 60}m`,
+      safeRiskScore: primarySecurity.securityLevel,
+      safeTrafficStatus: primaryTraffic.status,
+      safeTrafficIcon: primaryTraffic.icon,
+      safeTrafficColor: primaryTraffic.color,
+
+      altRoute: altRoute.coordinates,
+      altRouteDistance: parseFloat(altRoute.distance.toFixed(2)),
+      altRouteDuration: altTime,
+      altRouteDurationText: `${Math.floor(altTime / 60)}h ${altTime % 60}m`,
+      altRiskScore: altSecurity.securityLevel,
+      altTrafficStatus: altTraffic.status,
+      altTrafficIcon: altTraffic.icon,
+      altTrafficColor: altTraffic.color,
+
+      recommendation: recommendation === 'primary' ? 'Ruta segura (Recomendada)' : 'Ruta alternativa (Recomendada)',
+      recommendationReason,
+      
+      description: `${recommendation === 'primary' ? 'Ruta segura' : 'Ruta alternativa'} de ${primaryRoute.distance.toFixed(1)}km (${primaryTime}min con tráfico actual). Tráfico: ${primaryTraffic.status}. Seguridad: ${primarySecurity.securityLevel === 'Alto' ? '⚠️ Alta peligrosidad' : '✅ Zona segura'}.`
+    };
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('Route calculation error:', error);
+    res.status(500).json({ error: 'Error al calcular ruta: ' + error.message });
+  }
 });
 
 // ==========================================

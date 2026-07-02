@@ -10,7 +10,7 @@ export default function Navbar({ user, onLogout, onOpenLogin, onTriggerReportMod
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/items?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search-incidents?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -29,7 +29,7 @@ export default function Navbar({ user, onLogout, onOpenLogin, onTriggerReportMod
         <input
           type="text"
           className="search-input"
-          placeholder="Buscar equipamiento seguro (casco, linterna, etc.)..."
+          placeholder="Buscar incidentes por tipo, zona o descripción..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />

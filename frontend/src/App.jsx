@@ -184,8 +184,11 @@ export default function App() {
           } 
         />
 
+        {/* Incident Search Results */}
+        <Route path="/search-incidents" element={<SearchResults incidents={incidents} searchType="incidents" />} />
+
         {/* MercadoLibre Search Practice Views (SENA Challenge) */}
-        <Route path="/items" element={<SearchResults />} />
+        <Route path="/items" element={<SearchResults searchType="items" />} />
         <Route path="/items/:id" element={<ProductDetail />} />
       </Routes>
     </Router>
