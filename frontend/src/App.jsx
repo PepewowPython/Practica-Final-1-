@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
-import { getApiUrl, switchServer, getCurrentServer } from './config/apiConfig';
+import { getApiUrl } from './config/apiConfig';
 
 // Import components
 import SplashScreen from './components/SplashScreen';
@@ -17,7 +17,6 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [zones, setZones] = useState([]);
-  const [currentServer, setCurrentServer] = useState(getCurrentServer());
   
   // Routing / Map states
   const [routeData, setRouteData] = useState(null);
@@ -50,13 +49,6 @@ export default function App() {
     } catch (error) {
       console.error('Error fetching incidents/zones maps data:', error);
     }
-  };
-
-  // Handle server switch
-  const handleServerSwitch = (serverKey) => {
-    switchServer(serverKey);
-    setCurrentServer(getCurrentServer());
-    fetchMapData();
   };
 
   // Auth Handlers
@@ -152,8 +144,6 @@ export default function App() {
         onOpenLogin={handleOpenLogin}
         onTriggerReportMode={handleTriggerReportMode}
         reportMode={reportMode}
-        currentServer={currentServer}
-        onServerSwitch={handleServerSwitch}
       />
 
       <Routes>

@@ -2,10 +2,50 @@
   "users": [
     {
       "id": "1",
+      "name": "Admin Sistema",
+      "email": "admin@rutasinseguras.com",
+      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "phone": "3000000000",
+      "role": "Administrador",
+      "contacts": []
+    },
+    {
+      "id": "2",
+      "name": "Moderador Medellín",
+      "email": "moderador@rutasinseguras.com",
+      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "phone": "3011111111",
+      "role": "Moderador",
+      "contacts": []
+    },
+    {
+      "id": "3",
+      "name": "Jean Crespo",
+      "email": "jean@ejemplo.com",
+      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "phone": "3022222222",
+      "role": "Usuario Ciudadano",
+      "contacts": [
+        { "name": "María Crespo", "phone": "3109876543", "relacion": "Familiar" },
+        { "name": "Carlos Gómez", "phone": "3201234567", "relacion": "Amigo" }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Samuel Pérez",
+      "email": "samuel@ejemplo.com",
+      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "phone": "3033333333",
+      "role": "Usuario Ciudadano",
+      "contacts": []
+    },
+    {
+      "id": "5",
       "name": "Jeremy Chica",
       "email": "prueba@gmail.com",
       "password": "$2a$10$S26ynEFctFDiYBRlWm4OX.EiqPF2Eos3MGp0tHxgCWBSuSL.ute5e",
       "phone": "3126464292",
+      "role": "Usuario Ciudadano",
       "contacts": [
         { "name": "Mamá", "phone": "3109876543" },
         { "name": "Samuel Pérez", "phone": "3123456789" }
@@ -15,88 +55,91 @@
   "incidents": [
     {
       "id": "inc-1",
-      "title": "Robo con arma blanca",
+      "title": "Hurtos de Celulares (Cosquilleo)",
       "type": "Hurto",
-      "description": "Me robaron el celular en la esquina del Parque Berrio a las 8:00 PM. Poca presencia de policías.",
-      "latitude": 6.2494,
-      "longitude": -75.5678,
-      "date": "2026-06-24T20:15:00.000Z",
+      "description": "Robo de teléfono celular a transeúnte mientras esperaba transporte público.",
+      "latitude": 6.2453,
+      "longitude": -75.5684,
+      "ubicacion": "Parque Berrio / Calle 50",
+      "date": "2026-07-28T14:30:00.000Z",
       "reportedBy": "Jean Crespo",
       "status": "aprobado"
     },
     {
       "id": "inc-2",
-      "title": "Calle sin alumbrado público",
-      "type": "Iluminación",
-      "description": "Toda la cuadra está a oscuras. Es muy peligroso transitar a pie después de las 6:30 PM.",
-      "latitude": 6.2452,
-      "longitude": -75.5864,
-      "date": "2026-06-25T01:30:00.000Z",
+      "title": "Robo a Mano Armada",
+      "type": "Hurto",
+      "description": "Sujeto en motocicleta despojó de pertenencias a peatón.",
+      "latitude": 6.2629,
+      "longitude": -75.5684,
+      "ubicacion": "Calle 67 con Cra 53 - UdeA",
+      "date": "2026-07-28T18:45:00.000Z",
       "reportedBy": "Samuel Pérez",
       "status": "aprobado"
     },
     {
       "id": "inc-3",
-      "title": "Sospechosos merodeando",
+      "title": "Acoso Callejero",
       "type": "Sospechoso",
-      "description": "Dos personas en moto sin placas dando vueltas y observando a los peatones en los paraderos de buses.",
-      "latitude": 6.2085,
-      "longitude": -75.5662,
-      "date": "2026-06-25T07:00:00.000Z",
-      "reportedBy": "mamá",
+      "description": "Reporte de intimidación verbal a grupo de personas en la noche.",
+      "latitude": 6.2089,
+      "longitude": -75.5678,
+      "ubicacion": "Parque Lleras - El Poblado",
+      "date": "2026-07-28T22:15:00.000Z",
+      "reportedBy": "Jean Crespo",
       "status": "aprobado"
     }
   ],
   "zones": [
     {
       "id": "zone-1",
-      "name": "Centro (San Antonio / Parque de Berrío)",
+      "name": "Sector Parque de las Luces / San Antonio",
       "level": "alto",
       "color": "#840505",
-      "latitude": 6.2485,
-      "longitude": -75.5685,
-      "radius": 350,
-      "description": "Zona comercial de alta afluencia peatonal. Frecuentes reportes de cosquilleo y hurto."
+      "latitude": 6.2453,
+      "longitude": -75.5684,
+      "radius": 600,
+      "description": "Sector de alta afluencia peatonal y comercial en Medellín. Frecuentes reportes de cosquilleo y hurtos a transeúnte."
     },
     {
       "id": "zone-2",
-      "name": "Prado Centro",
-      "level": "alto",
-      "color": "#840505",
-      "latitude": 6.2575,
-      "longitude": -75.5625,
-      "radius": 300,
-      "description": "Zona residencial patrimonial con calles solitarias en las noches. Alto riesgo de robos."
+      "name": "Sector Prado Centro Norte",
+      "level": "medio",
+      "color": "#F0C862",
+      "latitude": 6.2570,
+      "longitude": -75.5650,
+      "radius": 450,
+      "description": "Zona residencial patrimonial con calles solitarias en las noches. Riesgo moderado de hurtos y escaso alumbrado."
     },
     {
       "id": "zone-3",
-      "name": "Entorno Parque Lleras",
+      "name": "Alrededores Universidad de Antioquia (Noche)",
+      "level": "alto",
+      "color": "#840505",
+      "latitude": 6.2629,
+      "longitude": -75.5684,
+      "radius": 500,
+      "description": "Entorno universitario con baja iluminación nocturna y reporte constante de intimidación a peatones y estudiantes."
+    },
+    {
+      "id": "zone-4",
+      "name": "El Poblado - Zona Rosa (Frecuencia de Cosquilleo)",
       "level": "medio",
       "color": "#F0C862",
       "latitude": 6.2089,
       "longitude": -75.5678,
-      "radius": 200,
-      "description": "Zona rosa y comercial. Precaución en horarios nocturnos debido a hurtos selectivos."
+      "radius": 400,
+      "description": "Zona rosa y gastronómica. Se sugiere precaución en horarios nocturnos debido a modalidades de cosquilleo."
     },
     {
-      "id": "zone-4",
+      "id": "zone-5",
       "name": "Terminal del Norte",
       "level": "medio",
       "color": "#F0C862",
       "latitude": 6.2709,
       "longitude": -75.5658,
       "radius": 250,
-      "description": "Zona de transporte con paraderos oscuros. Precaución al abordar transporte público."
-    },
-    {
-      "id": "zone-5",
-      "name": "Campus Universidad de Antioquia",
-      "level": "bajo",
-      "color": "#518555",
-      "latitude": 6.2629,
-      "longitude": -75.5684,
-      "radius": 300,
-      "description": "Zona universitaria protegida y vigilada. Generalmente segura durante el día."
+      "description": "Zona de transporte masivo con paraderos concurridos. Precaución al abordar transporte público tarde en la noche."
     },
     {
       "id": "zone-6",
@@ -106,7 +149,7 @@
       "latitude": 6.2464,
       "longitude": -75.5898,
       "radius": 150,
-      "description": "Zona segura con buena iluminación, cámaras de seguridad y patrullaje frecuente."
+      "description": "Zona residencial y comercial segura con buena iluminación, cámaras de seguridad y patrullaje policial constante."
     }
   ]
 }

@@ -154,7 +154,7 @@ app.get('/api/incidents', async (req, res) => {
 
 app.post('/api/incidents', async (req, res) => {
   try {
-    const { title, type, description, latitude, longitude, reportedBy } = req.body;
+    const { title, type, description, latitude, longitude, reportedBy, ubicacion } = req.body;
     if (!title || !type || !latitude || !longitude) {
       return res.status(400).json({ error: 'Faltan campos del incidente' });
     }
@@ -167,6 +167,7 @@ app.post('/api/incidents', async (req, res) => {
       description: description || '',
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
+      ubicacion: ubicacion || `Lat ${latitude}, Lng ${longitude}`,
       date: new Date().toISOString(),
       reportedBy: reportedBy || 'Anónimo',
       status: 'aprobado' // auto-approved for frontend showcase
@@ -319,6 +320,12 @@ async function addressToCoordinates(address) {
     'udea': [6.2629, -75.5684],
     'parque lleras': [6.2089, -75.5678],
     'lleras': [6.2089, -75.5678],
+    'parque de las luces': [6.2453, -75.5684],
+    'san antonio': [6.2453, -75.5684],
+    'parque berrio': [6.2494, -75.5678],
+    'berrio': [6.2494, -75.5678],
+    'prado centro': [6.2570, -75.5650],
+    'prado': [6.2570, -75.5650],
     'parque de la milagrosa': [6.2453, -75.5851],
     'milagrosa': [6.2453, -75.5851],
     'pedregal': [6.2104, -75.5683],
