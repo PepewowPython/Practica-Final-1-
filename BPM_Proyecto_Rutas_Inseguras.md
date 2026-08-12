@@ -1,4 +1,4 @@
-# Documentación de Modelado de Procesos de Negocio (BPM / BPMN)
+# Documentación de Modelado de Procesos de Negocio (BPM / BPMN 2.0)
 ## Proyecto: "Rutas Inseguras" — Plataforma de Movilidad Segura en Medellín
 
 ---
@@ -52,7 +52,115 @@ En la modelación BPMN se establecen los siguientes carriles (lanes) operacional
 
 ---
 
-## 4. Detalle Técnico y Diagramas BPMN
+## 3.5 DIAGRAMA BPMN GLOBAL DEL SISTEMA (MACROPROCESO END-TO-END CON SWIMLANES)
+
+A continuación se representa la arquitectura global de procesos de negocio de **"Rutas Inseguras"** organizada en carriles (*Swimlanes*) para diferenciar la responsabilidad de cada actor y capa tecnológica:
+
+```mermaid
+flowchart TB
+    subgraph POOL_CIUDADANO["POOL 1: CIUDADANO / USUARIO FINAL"]
+        direction LR
+        E_Start(["🟢 Evento Inicio: Necesidad Movilidad / Incidente"])
+        T_Auth["[BPM-01] Registrarse / Iniciar Sesión"]
+        T_ReqRoute["[BPM-02] Solicitar Origen y Destino"]
+        T_SelectRoute["Seleccionar Ruta Sugerida o Alternativa"]
+        T_ReportInc["[BPM-03] Reportar Incidente de Inseguridad"]
+        T_GPSNav["[BPM-05] Desplazarse con GPS Activo"]
+        T_SOS["[BPM-06] Activar Botón de Emergencia SOS"]
+        T_Shop["[BPM-07] Consultar Equipamiento de Seguridad"]
+        E_EndUser(["🔴 Evento Fin: Destino Alcanzado / Alerta Gestionada"])
+    end
+
+    subgraph POOL_FRONTEND["POOL 2: FRONTEND WEB (Vite / React Client)"]
+        direction LR
+        F_AuthUI["Renderizar Formulario Auth & JWT State"]
+        F_Geocode["Geocodificar Landmarks de Medellín"]
+        F_MapRender["Renderizar Mapa Leaflet con Capas de Riesgo"]
+        F_FormInc["Capturar Coordenadas y Detalles del Incidente"]
+        F_GPSMonitor["Transmitir Posición GPS Continua"]
+        F_SoundAlert["Disparar Alerta Sonora & Banner Emergencia"]
+        F_ShopUI["Desplegar Catálogo MercadoLibre"]
+    end
+
+    subgraph POOL_BACKEND["POOL 3: BACKEND API (Node.js / Express Server)"]
+        direction LR
+        B_AuthService["Servicio Auth: Bcrypt Hash & Firma JWT"]
+        B_TrafficService["[RN-04] Evaluar Factor Tráfico según Hora/Día"]
+        B_RiskEngine["[Motor Riesgo] Calcular Haversine vs Zonas & Incidentes"]
+        B_DecisionRoute{"¿Ruta Principal es Alto Riesgo? (RN-05)"}
+        B_RecAlt["Asignar Recomendada: Ruta Alternativa"]
+        B_RecMain["Asignar Recomendada: Ruta Directa"]
+        B_IncService["Registrar Incidente en estado 'pendiente'"]
+        B_GeofenceEngine{"¿Usuario a <= Radio + 300m de Zona Roja? (RN-10)"}
+        B_TriggerAlert["Generar Registro Alerta Preventiva"]
+        B_SOSTracker["Crear Sesión en ubicaciones_compartidas"]
+        B_MLService["Gestionar API MercadoLibre / Cache Fallback 403"]
+    end
+
+    subgraph POOL_MODERACION["POOL 4: EQUIPO DE MODERACIÓN & ADMIN"]
+        direction LR
+        M_Review["Revisar Bandeja de Incidentes Pendientes"]
+        M_Decision{"¿Incidente Válido y Fidedigno? (RN-14)"}
+        M_Approve["Aprobar Reporte y Publicar en Mapa Público"]
+        M_Reject["Rechazar y Archivar Reporte"]
+        M_UpdateZone["Recalcular Radio / Nivel de Riesgo de Zona"]
+    end
+
+    subgraph POOL_EXTERNOS["POOL 5: SERVICIOS EXTERNOS & CONTACTOS"]
+        direction LR
+        Ext_OSRM["OSRM Routing Engine (driving API)"]
+        Ext_ML["MercadoLibre Public API"]
+        Ext_Contacts["Contactos de Confianza (Red SOS)"]
+    end
+
+    %% Flujos de Información Inter-Pools %%
+    E_Start --> T_Auth
+    T_Auth --> F_AuthUI
+    F_AuthUI --> B_AuthService
+    
+    T_ReqRoute --> F_Geocode
+    F_Geocode --> B_TrafficService
+    B_TrafficService --> Ext_OSRM
+    Ext_OSRM --> B_RiskEngine
+    B_RiskEngine --> B_DecisionRoute
+    
+    B_DecisionRoute -- "Sí (Puntaje >= 5.0)" --> B_RecAlt
+    B_DecisionRoute -- "No (Puntaje < 5.0)" --> B_RecMain
+    
+    B_RecAlt --> F_MapRender
+    B_RecMain --> F_MapRender
+    F_MapRender --> T_SelectRoute
+    T_SelectRoute --> T_GPSNav
+    
+    T_GPSNav --> F_GPSMonitor
+    F_GPSMonitor --> B_GeofenceEngine
+    
+    B_GeofenceEngine -- "Sí" --> B_TriggerAlert
+    B_TriggerAlert --> F_SoundAlert
+    
+    T_ReportInc --> F_FormInc
+    F_FormInc --> B_IncService
+    B_IncService --> M_Review
+    
+    M_Review --> M_Decision
+    M_Decision -- "Sí" --> M_Approve
+    M_Decision -- "No" --> M_Reject
+    M_Approve --> M_UpdateZone
+    M_UpdateZone --> B_RiskEngine
+    
+    T_SOS --> B_SOSTracker
+    B_SOSTracker --> Ext_Contacts
+    
+    T_Shop --> F_ShopUI
+    F_ShopUI --> B_MLService
+    B_MLService --> Ext_ML
+    
+    T_GPSNav --> E_EndUser
+```
+
+---
+
+## 4. Detalle Técnico y Diagramas BPMN por Módulo
 
 ---
 
@@ -202,11 +310,11 @@ Proceso de control mediante el cual un Moderador o Administrador analiza los rep
 
 ```mermaid
 flowchart TD
-    StartMod([Inicio: Modulo de Moderación]) --> FetchPending[Obtener Listado de Incidentes Pendientes]
+    StartMod([Inicio: Módulo de Moderación]) --> FetchPending[Obtener Listado de Incidentes Pendientes]
     FetchPending --> SelectInc[Moderador Selecciona Incidente a Evaluar]
     
     SelectInc --> CheckEv[Analizar Evidencias / Coordenadas / Duplicados]
-    CheckEv --> Decision{¿Incidente Valido y Único?}
+    CheckEv --> Decision{¿Incidente Válido y Único?}
     
     Decision -- No --> Reject[Marcar como Rechazado en DB]
     Reject --> LogReject[Registrar en moderacion_reportes]
