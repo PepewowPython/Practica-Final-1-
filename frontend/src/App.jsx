@@ -10,7 +10,6 @@ import SidebarPanel from './components/SidebarPanel';
 import MapContainer from './components/MapContainer';
 import IncidentForm from './components/IncidentForm';
 import SearchResults from './components/SearchResults';
-import ProductDetail from './components/ProductDetail';
 
 export default function App() {
   // Global States
@@ -188,10 +187,6 @@ export default function App() {
 
         {/* Incident Search Results */}
         <Route path="/search-incidents" element={<SearchResults incidents={incidents} searchType="incidents" />} />
-
-        {/* MercadoLibre Search Practice Views (SENA Challenge) */}
-        <Route path="/items" element={<SearchResults searchType="items" />} />
-        <Route path="/items/:id" element={<ProductDetail />} />
       </Routes>
     </Router>
   );

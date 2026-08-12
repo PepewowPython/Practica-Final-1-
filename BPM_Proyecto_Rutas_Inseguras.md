@@ -11,12 +11,11 @@ El presente documento tiene como objetivo formalizar y estandarizar la especific
 Esta especificación detalla las actividades, secuencias, reglas de negocio, actores intervinientes, compuertas de decisión, intercambios de datos y puntos de integración tecnológica dentro del sistema.
 
 ### 1.2 Contexto del Proyecto
-**"Rutas Inseguras"** es una solución tecnológica web/móvil orientada a la seguridad ciudadana y la movilidad inteligente en la ciudad de Medellín. Permite a los ciudadanos:
+**"Rutas Inseguras"** es una solución tecnológica web/móvil orientada a la seguridad ciudadana, la prevención del delito y la movilidad inteligente en la ciudad de Medellín. Permite a los ciudadanos:
 1. Consultar trayectos seguros evaluando en tiempo real el tráfico y los niveles de riesgo por criminalidad.
 2. Reportar incidentes de inseguridad de forma colaborativa (crowdsourcing).
-3. Recibir alertas preventivas geolocalizadas al aproximarse a zonas críticas.
-4. Transmitir su ubicación GPS en tiempo real a una red de contactos de confianza ante emergencias.
-5. Adquirir equipamiento de seguridad personal a través de la integración con el ecosistema de MercadoLibre.
+3. Recibir alertas preventivas geolocalizadas al aproximarse a zonas críticas catalogadas.
+4. Transmitir su ubicación GPS en tiempo real a una red de contactos de confianza ante situaciones de emergencia.
 
 ---
 
@@ -26,15 +25,14 @@ En la modelación BPMN se establecen los siguientes carriles (lanes) operacional
 
 | Actor / Rol | Tipo | Descripción y Atribuciones |
 | :--- | :--- | :--- |
-| **Ciudadano / Usuario Final** | Humano (Externo) | Usuario que consulta rutas, reporta incidentes, recibe alertas y comparte su geolocalización SOS. |
+| **Ciudadano / Usuario Final** | Humano (Externo) | Usuario que consulta rutas, reporta incidentes, recibe alertas preventivas y comparte su geolocalización SOS. |
 | **Moderador de Seguridad** | Humano (Interno) | Operador encargado de auditar, verificar, aprobar o rechazar los reportes ciudadanos de incidentes. |
 | **Administrador del Sistema** | Humano (Interno) | Responsable de la gestión de roles, auditoría global y catalogación de zonas de riesgo. |
 | **Contactos de Confianza** | Humano (Destinatario) | Red de emergencia del usuario que recibe notificaciones de seguimiento en tiempo real y alertas SOS. |
-| **Frontend Web (Vite/React)** | Sistema (Cliente) | Interfaz visual interactiva con mapas, formularios y notificaciones. |
+| **Frontend Web (Vite/React)** | Sistema (Cliente) | Interfaz visual interactiva con mapas, formularios y notificaciones en tiempo real. |
 | **Backend API (Node.js/Express)** | Sistema (Servidor) | Núcleo de servicios REST, procesamiento de lógica de negocio y autenticación JWT. |
 | **Motor de Evaluación de Riesgo** | Algoritmo | Componente de cálculo espacial que aplica la fórmula de Haversine y ponderaciones de peligro. |
-| **Servicio OSRM Routing** | API Externa | Proveedor de cálculo geométrico y ruteo sobre red vial urbana. |
-| **API MercadoLibre / Cache** | API Externa / Servicio | Proveedor de catálogo de insumos de protección y equipos de seguridad personal. |
+| **Servicio OSRM Routing** | API Externa | Proveedor de cálculo geométrico y ruteo sobre la red vial urbana. |
 
 ---
 
@@ -48,7 +46,6 @@ En la modelación BPMN se establecen los siguientes carriles (lanes) operacional
 | **BPM-04** | Moderación, Verificación y Catalogación de Zonas de Riesgo | Control / Operativo | RF-06, RF-07, RF-14 / `moderacion_reportes`, `zonas_riesgo` |
 | **BPM-05** | Monitoreo GPS y Motor de Alertas Preventivas en Tiempo Real | Misional / Prevención | RF-03, RF-10, RF-11 / `ubicaciones`, `alertas` |
 | **BPM-06** | Transmisión de Ubicación de Emergencia / SOS a Contactos | Misional / Emergencia | RF-13 / `ubicaciones_compartidas` |
-| **BPM-07** | Consulta e Integración con Catálogo de Seguridad MercadoLibre | Valor Agregado | Integración ML / `/api/items` |
 
 ---
 
@@ -67,7 +64,6 @@ flowchart TB
         T_ReportInc["[BPM-03] Reportar Incidente de Inseguridad"]
         T_GPSNav["[BPM-05] Desplazarse con GPS Activo"]
         T_SOS["[BPM-06] Activar Botón de Emergencia SOS"]
-        T_Shop["[BPM-07] Consultar Equipamiento de Seguridad"]
         E_EndUser(["🔴 Evento Fin: Destino Alcanzado / Alerta Gestionada"])
     end
 
@@ -79,7 +75,6 @@ flowchart TB
         F_FormInc["Capturar Coordenadas y Detalles del Incidente"]
         F_GPSMonitor["Transmitir Posición GPS Continua"]
         F_SoundAlert["Disparar Alerta Sonora & Banner Emergencia"]
-        F_ShopUI["Desplegar Catálogo MercadoLibre"]
     end
 
     subgraph POOL_BACKEND["POOL 3: BACKEND API (Node.js / Express Server)"]
@@ -94,7 +89,6 @@ flowchart TB
         B_GeofenceEngine{"¿Usuario a <= Radio + 300m de Zona Roja? (RN-10)"}
         B_TriggerAlert["Generar Registro Alerta Preventiva"]
         B_SOSTracker["Crear Sesión en ubicaciones_compartidas"]
-        B_MLService["Gestionar API MercadoLibre / Cache Fallback 403"]
     end
 
     subgraph POOL_MODERACION["POOL 4: EQUIPO DE MODERACIÓN & ADMIN"]
@@ -109,7 +103,6 @@ flowchart TB
     subgraph POOL_EXTERNOS["POOL 5: SERVICIOS EXTERNOS & CONTACTOS"]
         direction LR
         Ext_OSRM["OSRM Routing Engine (driving API)"]
-        Ext_ML["MercadoLibre Public API"]
         Ext_Contacts["Contactos de Confianza (Red SOS)"]
     end
 
@@ -150,10 +143,6 @@ flowchart TB
     
     T_SOS --> B_SOSTracker
     B_SOSTracker --> Ext_Contacts
-    
-    T_Shop --> F_ShopUI
-    F_ShopUI --> B_MLService
-    B_MLService --> Ext_ML
     
     T_GPSNav --> E_EndUser
 ```
@@ -406,33 +395,6 @@ sequenceDiagram
 
 ---
 
-### 4.7 BPM-07: Consulta e Integración con Catálogo de Seguridad MercadoLibre
-
-#### Descripción del Flujo
-Ofrece al usuario la posibilidad de buscar y adquirir equipamiento de protección personal (cascos homologados, linternas tácticas, chalecos reflectivos, alarmas sonoras, candados de seguridad). Implementa un patrón de **Resiliencia y Auto-Recuperación (Self-healing)** para evitar interrupciones en caso de bloqueos externos (HTTP 403 o fallas de red).
-
-```mermaid
-flowchart TD
-    StartML([Inicio: Buscador de Equipamiento]) --> QueryInput[Usuario consulta: ej. casco, linterna]
-    QueryInput --> CallMLAPI[Backend ejecuta GET a API MercadoLibre]
-    
-    CallMLAPI --> ResponseCheck{¿Respuesta HTTP 200 OK?}
-    
-    ResponseCheck -- Sí --> FormatML[Formatear Items según Firmado Autor]
-    ResponseCheck -- No/403 Forbidden --> FallbackML[Activar Catálogo Local Mock en Caché]
-    
-    FallbackML --> MatchCat[Filtrar Productos Mock por Categoría y Relevancia]
-    MatchCat --> FormatMock[Formatear Estructura con Precios COP e Imágenes]
-    
-    FormatML --> SendJSON[Responder JSON al Frontend con Firma de Autor]
-    FormatMock --> SendJSON
-    
-    SendJSON --> RenderUI[Renderizar Grid de Productos en UI]
-    RenderUI --> EndML([Fin del Proceso de Consulta])
-```
-
----
-
 ## 5. Matriz de Trazabilidad (BPM vs. Requerimientos e Indicadores KPIs)
 
 ### 5.1 Matriz de Alineación de Requerimientos
@@ -445,17 +407,54 @@ flowchart TD
 | **BPM-04** | RF-06, RF-07, RF-14 | `moderacion_reportes`, `zonas_riesgo` | Dictamen de moderación registrado y auditoría en `historial_riesgo`. |
 | **BPM-05** | RF-03, RF-10, RF-11 | `ubicaciones`, `alertas` | Alerta disparada al estar a menos de (Radio + 300m) de zona roja. |
 | **BPM-06** | RF-13 | `ubicaciones_compartidas` | Notificación enviada a contactos y sesión de seguimiento activa. |
-| **BPM-07** | Integración ML API | Endpoint `/api/items` | Respuesta en < 500ms con fallback resiliente ante fallas 403. |
 
 ---
 
 ### 5.2 Indicadores Clave de Desempeño (KPIs del Negocio)
 
-1. **Tiempo de Cálculo de Ruta Segura ($KPI_1$)**:
-   $$\text{Tiempo Promedio} \le 1.5 \text{ segundos desde la solicitud del usuario.}$$
-2. **Efectividad de Desvío Preventivo ($KPI_2$)**:
-   $$\% \text{ Rutas Alternativas Adoptadas} = \left( \frac{\text{Rutas Alternativas Seleccionadas}}{\text{Total Rutas de Alto Riesgo Calculadas}} \right) \times 100 \ge 85\%$$
-3. **Tiempo de Respuesta a Alertas SOS ($KPI_3$)**:
-   $$\text{Despacho Notificación a Contactos} \le 3.0 \text{ segundos desde el clic en SOS.}$$
-4. **Tasa de Resiliencia del Catálogo ($KPI_4$)**:
-   $$\text{Disponibilidad del Servicio de Equipamiento} = 99.9\% \text{ (gracias al motor Fallback Local).}$$
+Para evaluar la eficiencia operativa, la seguridad vial y la calidad de la experiencia de usuario en la plataforma **Rutas Inseguras**, se establecen los siguientes cuatro Indicadores Clave de Desempeño (KPIs):
+
+#### 1. KPI-01: Tiempo Promedio de Respuesta en Cálculo de Rutas ($KPI_1$)
+* **Objetivo de Negocio**: Garantizar una respuesta ágil e inmediata en la generación de trayectos seguros, optimizando la experiencia de navegación del ciudadano.
+* **Fórmula de Cálculo**:
+  $$\text{Tiempo Promedio (ms)} = \frac{\sum \text{Tiempo de Respuesta del Servidor (ms)}}{\text{Total de Solicitudes de Ruta Procesadas}}$$
+* **Meta de Desempeño**: $\le 1.500 \text{ ms (1.5 segundos por consulta)}$.
+* **Frecuencia de Medición**: Continua (Monitoreo automatizado en cada petición a `/api/routes`).
+
+---
+
+#### 2. KPI-02: Tasa de Adopción de Rutas Alternativas Preventivas ($KPI_2$)
+* **Objetivo de Negocio**: Evaluar la efectividad del sistema de recomendación al guiar a los usuarios hacia desvíos seguros cuando la ruta principal presenta un nivel de riesgo elevado.
+* **Fórmula de Cálculo**:
+  $$\text{Tasa de Adopción (\%)} = \left( \frac{\text{Rutas Alternativas Seleccionadas}}{\text{Total de Consultas con Ruta Principal en Alto Riesgo}} \right) \times 100$$
+* **Meta de Desempeño**: $\ge 85\% \text{ de aceptación por parte de los usuarios}$.
+* **Frecuencia de Medición**: Mensual (Consolidación analítica en la tabla `estadisticas`).
+
+---
+
+#### 3. KPI-03: Tiempo de Despacho de Alertas SOS y Transmisión de Ubicación ($KPI_3$)
+* **Objetivo de Negocio**: Minimizar el tiempo de reacción ante situaciones de emergencia, garantizando que la red de contactos reciba la ubicación del usuario sin demoras.
+* **Fórmula de Cálculo**:
+  $$\text{Tiempo de Despacho (s)} = \text{Hora de Notificación al Contacto} - \text{Hora de Pulsación del Botón SOS}$$
+* **Meta de Desempeño**: $\le 3.0 \text{ segundos desde la activación del evento}$.
+* **Frecuencia de Medición**: Por cada evento de pánico activado.
+
+---
+
+#### 4. KPI-04: Tasa de Moderación Oportuna de Reportes Ciudadanos ($KPI_4$)
+* **Objetivo de Negocio**: Asegurar que los reportes de inseguridad emitidos por la comunidad sean verificados y aprobados con rapidez para mantener actualizada la capa pública de zonas de riesgo en el mapa.
+* **Fórmula de Cálculo**:
+  $$\text{Tasa de Moderación Oportuna (\%)} = \left( \frac{\text{Reportes Moderados en } \le 24\text{ Horas}}{\text{Total de Reportes Ingresados}} \right) \times 100$$
+* **Meta de Desempeño**: $\ge 95\% \text{ de oportunidad en la moderación}$.
+* **Frecuencia de Medición**: Semanal.
+
+---
+
+### Resumen de Metas de los KPIs
+
+| Código KPI | Nombre del Indicador | Métrica / Unidad | Meta Establecida | Frecuencia |
+| :--- | :--- | :--- | :--- | :--- |
+| **KPI-01** | Tiempo de Cálculo de Ruta | Milisegundos (ms) | $\le 1500 \text{ ms}$ | Continua |
+| **KPI-02** | Adopción de Rutas Alternativas | Porcentaje (%) | $\ge 85\%$ | Mensual |
+| **KPI-03** | Tiempo de Despacho Alertas SOS | Segundos (s) | $\le 3.0 \text{ s}$ | Por Evento |
+| **KPI-04** | Moderación Oportuna de Incidentes | Porcentaje (%) | $\ge 95\%$ | Semanal |
