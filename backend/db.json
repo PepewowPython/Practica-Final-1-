@@ -4,51 +4,55 @@
       "id": "1",
       "name": "Admin Sistema",
       "email": "admin@rutasinseguras.com",
-      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "password": "$2a$10$o6jGEXsnNGoiuv2gZtUTaOaVVINc6.3jcK8CjGPHRVGPqlE0j5NUq",
       "phone": "3000000000",
       "role": "Administrador",
+      "status": "activo",
       "contacts": []
     },
     {
       "id": "2",
       "name": "Moderador Medellín",
       "email": "moderador@rutasinseguras.com",
-      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
+      "password": "$2a$10$xHcmTddVmO7O2HVcet.VyuuS/kGlpMfd.jOQrSKkzanwBdXt4tPgq",
       "phone": "3011111111",
       "role": "Moderador",
+      "status": "activo",
       "contacts": []
     },
     {
       "id": "3",
+      "name": "Analista de Seguridad",
+      "email": "analista@rutasinseguras.com",
+      "password": "$2a$10$HeXyVWFBLCPiCfGVSTDeaulrAke3/h5uWbtGHNajuVjeKqQHi4Bd2",
+      "phone": "3022222222",
+      "role": "Analista de Seguridad",
+      "status": "activo",
+      "contacts": []
+    },
+    {
+      "id": "4",
       "name": "Jean Crespo",
       "email": "jean@ejemplo.com",
-      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
-      "phone": "3022222222",
+      "password": "$2a$10$s7ob7ZNCwqNE0qNR9B36BOBoidArB1/QQmYdl6xtLbXN46OIOuI4K",
+      "phone": "3033333333",
       "role": "Usuario Ciudadano",
+      "status": "activo",
       "contacts": [
         { "name": "María Crespo", "phone": "3109876543", "relacion": "Familiar" },
         { "name": "Carlos Gómez", "phone": "3201234567", "relacion": "Amigo" }
       ]
     },
     {
-      "id": "4",
-      "name": "Samuel Pérez",
-      "email": "samuel@ejemplo.com",
-      "password": "$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.",
-      "phone": "3033333333",
-      "role": "Usuario Ciudadano",
-      "contacts": []
-    },
-    {
       "id": "5",
       "name": "Jeremy Chica",
       "email": "prueba@gmail.com",
-      "password": "$2a$10$S26ynEFctFDiYBRlWm4OX.EiqPF2Eos3MGp0tHxgCWBSuSL.ute5e",
+      "password": "$2a$10$s7ob7ZNCwqNE0qNR9B36BOBoidArB1/QQmYdl6xtLbXN46OIOuI4K",
       "phone": "3126464292",
       "role": "Usuario Ciudadano",
+      "status": "activo",
       "contacts": [
-        { "name": "Mamá", "phone": "3109876543" },
-        { "name": "Samuel Pérez", "phone": "3123456789" }
+        { "name": "Mamá", "phone": "3109876543" }
       ]
     }
   ],
@@ -57,37 +61,79 @@
       "id": "inc-1",
       "title": "Hurtos de Celulares (Cosquilleo)",
       "type": "Hurto",
-      "description": "Robo de teléfono celular a transeúnte mientras esperaba transporte público.",
+      "description": "Robo de teléfono celular a transeúnte mientras esperaba transporte público en horario concurrido.",
       "latitude": 6.2453,
       "longitude": -75.5684,
       "ubicacion": "Parque Berrio / Calle 50",
-      "date": "2026-07-28T14:30:00.000Z",
+      "date": "2026-08-18T14:30:00.000Z",
       "reportedBy": "Jean Crespo",
-      "status": "aprobado"
+      "status": "aprobado",
+      "notes": "Verificado con reporte previo de comunidad."
     },
     {
       "id": "inc-2",
-      "title": "Robo a Mano Armada",
+      "title": "Robo a Mano Armada por Motociclistas",
       "type": "Hurto",
-      "description": "Sujeto en motocicleta despojó de pertenencias a peatón.",
+      "description": "Sujetos en motocicleta negra despojaron de pertenencias a estudiante.",
       "latitude": 6.2629,
       "longitude": -75.5684,
-      "ubicacion": "Calle 67 con Cra 53 - UdeA",
-      "date": "2026-07-28T18:45:00.000Z",
-      "reportedBy": "Samuel Pérez",
-      "status": "aprobado"
+      "ubicacion": "Calle 67 con Cra 53 - Alrededores UdeA",
+      "date": "2026-08-18T18:45:00.000Z",
+      "reportedBy": "Jeremy Chica",
+      "status": "aprobado",
+      "notes": "Confirmado por patrulla del cuadrante."
     },
     {
       "id": "inc-3",
-      "title": "Acoso Callejero",
+      "title": "Acoso e Intimidación Callejera",
       "type": "Sospechoso",
-      "description": "Reporte de intimidación verbal a grupo de personas en la noche.",
+      "description": "Reporte de intimidación verbal y seguimiento a transeúntes en la noche.",
       "latitude": 6.2089,
       "longitude": -75.5678,
       "ubicacion": "Parque Lleras - El Poblado",
-      "date": "2026-07-28T22:15:00.000Z",
+      "date": "2026-08-17T22:15:00.000Z",
       "reportedBy": "Jean Crespo",
-      "status": "aprobado"
+      "status": "aprobado",
+      "notes": "Validado."
+    },
+    {
+      "id": "inc-4",
+      "title": "Luminaria Fundida y Tramo Oscuro",
+      "type": "Iluminación",
+      "description": "Falta de alumbrado público en tramo peatonal de 200 metros, genera alta inseguridad.",
+      "latitude": 6.2570,
+      "longitude": -75.5650,
+      "ubicacion": "Prado Centro - Calle 62",
+      "date": "2026-08-19T01:10:00.000Z",
+      "reportedBy": "Anónimo",
+      "status": "pendiente",
+      "notes": "Pendiente por revisión geográfica."
+    },
+    {
+      "id": "inc-5",
+      "title": "Persona Sospechosa Observando Vehículos",
+      "type": "Sospechoso",
+      "description": "Individuo manipulando cerraduras de carros estacionados.",
+      "latitude": 6.2464,
+      "longitude": -75.5898,
+      "ubicacion": "Laureles / Primer Parque",
+      "date": "2026-08-19T05:20:00.000Z",
+      "reportedBy": "Jeremy Chica",
+      "status": "pendiente",
+      "notes": "Requiere verificación de dirección exacta."
+    },
+    {
+      "id": "inc-6",
+      "title": "Falsa Alarma de Balacera",
+      "type": "Hurto",
+      "description": "Reporte sin sustento de sonidos detonantes que resultaron ser pólvora.",
+      "latitude": 6.2709,
+      "longitude": -75.5658,
+      "ubicacion": "Terminal del Norte",
+      "date": "2026-08-16T11:00:00.000Z",
+      "reportedBy": "Anónimo",
+      "status": "rechazado",
+      "notes": "Desestimado tras verificación policial."
     }
   ],
   "zones": [

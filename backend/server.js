@@ -324,7 +324,16 @@ app.post('/api/dev/test-user', async (req, res) => {
 app.get('/api/incidents', async (req, res) => {
   try {
     const db = await readDB();
-    res.json(db.incidents);
+    const { status, all } = req.query;
+    if (all === 'true') {
+      return res.json(db.incidents);
+    }
+    if (status) {
+      return res.json(db.incidents.filter(i => i.status === status));
+    }
+    // Default for citizen view: approved or legacy un-statused incidents
+    const publicIncidents = db.incidents.filter(i => !i.status || i.status === 'aprobado');
+    res.json(publicIncidents);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener incidentes' });
   }
@@ -332,7 +341,7 @@ app.get('/api/incidents', async (req, res) => {
 
 app.post('/api/incidents', async (req, res) => {
   try {
-    const { title, type, description, latitude, longitude, reportedBy, ubicacion } = req.body;
+    const { title, type, description, latitude, longitude, reportedBy, ubicacion, status } = req.body;
     if (!title || !type || !latitude || !longitude) {
       return res.status(400).json({ error: 'Faltan campos del incidente' });
     }
@@ -345,10 +354,11 @@ app.post('/api/incidents', async (req, res) => {
       description: description || '',
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
-      ubicacion: ubicacion || `Lat ${latitude}, Lng ${longitude}`,
+      ubicacion: ubicacion || `Lat ${parseFloat(latitude).toFixed(4)}, Lng ${parseFloat(longitude).toFixed(4)}`,
       date: new Date().toISOString(),
       reportedBy: reportedBy || 'Anónimo',
-      status: 'aprobado' // auto-approved for frontend showcase
+      status: status || 'pendiente', // Sent to moderation queue by default
+      notes: 'Pendiente de moderación comunitaria'
     };
 
     db.incidents.push(newIncident);
@@ -368,6 +378,160 @@ app.get('/api/zones', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener zonas de riesgo' });
   }
 });
+
+// ==========================================
+// ADMIN ENDPOINTS (USER MANAGEMENT)
+// ==========================================
+
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const db = await readDB();
+    const safeUsers = db.users.map(({ password, ...u }) => u);
+    res.json(safeUsers);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener lista de usuarios' });
+  }
+});
+
+app.patch('/api/admin/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, status, name, phone } = req.body;
+    const db = await readDB();
+    const userIdx = db.users.findIndex(u => u.id === String(id));
+    if (userIdx === -1) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (role) db.users[userIdx].role = role;
+    if (status) db.users[userIdx].status = status;
+    if (name) db.users[userIdx].name = name;
+    if (phone !== undefined) db.users[userIdx].phone = phone;
+
+    await writeDB(db);
+    const { password, ...updatedUser } = db.users[userIdx];
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar usuario' });
+  }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await readDB();
+    const initialLen = db.users.length;
+    db.users = db.users.filter(u => u.id !== String(id));
+    if (db.users.length === initialLen) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    await writeDB(db);
+    res.json({ message: 'Usuario eliminado exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar usuario' });
+  }
+});
+
+// ==========================================
+// MODERATOR ENDPOINTS (INCIDENT VERIFICATION)
+// ==========================================
+
+app.get('/api/moderator/incidents', async (req, res) => {
+  try {
+    const db = await readDB();
+    res.json(db.incidents);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al cargar cola de moderación' });
+  }
+});
+
+app.patch('/api/moderator/incidents/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, type, description, latitude, longitude, ubicacion, status, notes } = req.body;
+    const db = await readDB();
+    const incIdx = db.incidents.findIndex(i => i.id === String(id));
+    if (incIdx === -1) {
+      return res.status(404).json({ error: 'Incidente no encontrado' });
+    }
+
+    if (title) db.incidents[incIdx].title = title;
+    if (type) db.incidents[incIdx].type = type;
+    if (description !== undefined) db.incidents[incIdx].description = description;
+    if (latitude) db.incidents[incIdx].latitude = parseFloat(latitude);
+    if (longitude) db.incidents[incIdx].longitude = parseFloat(longitude);
+    if (ubicacion) db.incidents[incIdx].ubicacion = ubicacion;
+    if (status) db.incidents[incIdx].status = status;
+    if (notes !== undefined) db.incidents[incIdx].notes = notes;
+
+    await writeDB(db);
+    res.json(db.incidents[incIdx]);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al moderar incidente' });
+  }
+});
+
+app.delete('/api/moderator/incidents/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await readDB();
+    db.incidents = db.incidents.filter(i => i.id !== String(id));
+    await writeDB(db);
+    res.json({ message: 'Incidente eliminado por el moderador' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar incidente' });
+  }
+});
+
+// ==========================================
+// ANALYST ENDPOINTS (SECURITY INTELLIGENCE)
+// ==========================================
+
+app.get('/api/analytics/metrics', async (req, res) => {
+  try {
+    const db = await readDB();
+    const totalIncidents = db.incidents.length;
+    const approvedIncidents = db.incidents.filter(i => i.status === 'aprobado').length;
+    const pendingIncidents = db.incidents.filter(i => i.status === 'pendiente').length;
+    const rejectedIncidents = db.incidents.filter(i => i.status === 'rechazado').length;
+
+    // Type distribution
+    const byType = {};
+    db.incidents.forEach(i => {
+      byType[i.type] = (byType[i.type] || 0) + 1;
+    });
+
+    // Hourly distribution
+    const hourly = { Mañana: 0, Tarde: 0, Noche: 0, Madrugada: 0 };
+    db.incidents.forEach(i => {
+      const h = new Date(i.date).getHours();
+      if (h >= 6 && h < 12) hourly.Mañana++;
+      else if (h >= 12 && h < 18) hourly.Tarde++;
+      else if (h >= 18 && h < 24) hourly.Noche++;
+      else hourly.Madrugada++;
+    });
+
+    // Risk Index (Scale 1-10)
+    const riskIndex = (totalIncidents * 1.2 + db.zones.length * 0.8).toFixed(1);
+
+    res.json({
+      totalIncidents,
+      approvedIncidents,
+      pendingIncidents,
+      rejectedIncidents,
+      byType,
+      hourly,
+      riskIndex: Math.min(parseFloat(riskIndex), 9.5),
+      peakHours: '20:00 - 23:00 hrs',
+      mostFrequentType: Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Hurto',
+      zonesCount: db.zones.length,
+      calculatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al calcular métricas analíticas' });
+  }
+});
+
 
 // ==========================================
 // ROUTE CALCULATION WITH TRAFFIC ANALYSIS

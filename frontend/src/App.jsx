@@ -11,6 +11,11 @@ import MapContainer from './components/MapContainer';
 import IncidentForm from './components/IncidentForm';
 import SearchResults from './components/SearchResults';
 
+// Import Role Dashboards
+import ModeratorDashboard from './components/ModeratorDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import AnalystDashboard from './components/AnalystDashboard';
+
 export default function App() {
   // Global States
   const [user, setUser] = useState(null);
@@ -69,6 +74,21 @@ export default function App() {
     setSidebarTab('cuenta');
   };
 
+  // Quick Demo Role Switcher
+  const handleSwitchDemoRole = (newRole) => {
+    const activeUser = user || {
+      id: 'demo-user',
+      name: 'Usuario Demo',
+      email: 'demo@rutasinseguras.com',
+      phone: '3000000000',
+      contacts: []
+    };
+
+    const updatedUser = { ...activeUser, role: newRole };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   // Map Handlers
   const handleTriggerReportMode = () => {
     setReportMode(!reportMode);
@@ -92,7 +112,7 @@ export default function App() {
       setTempMarkerCoords(null);
       setSidebarTab('incidentes'); // open incident list to show it
       
-      alert('¡Gracias por tu civismo! Tu reporte de inseguridad ha sido registrado y es visible para toda la comunidad.');
+      alert('¡Gracias por tu civismo! Tu reporte de inseguridad ha sido enviado a la cola de moderación. Una vez verificado por nuestro equipo, se mostrará públicamente.');
     } catch (error) {
       console.error('Error reporting incident:', error);
       alert('Ocurrió un error al enviar el reporte. Por favor reintenta.');
@@ -118,16 +138,6 @@ export default function App() {
   };
 
   const handleCenterMapOnCoords = (lat, lng) => {
-    // Dispatch custom event to let MapContainer center it, or simple selector
-    // Access Leaflet map instance indirectly is cleaner if we just pan coordinates in leaflet container via state or event,
-    // since MapContainer receives coordinates and updates. We can pass a center coords state!
-    // But since MapContainer handles zooming, we can also use a window event or let it pan.
-    // Let's pass the coords as a temporary route or marker focus state.
-    // For simplicity, we can let MapContainer handle centering when incidents change or by checking if a clickedIncident state is passed.
-    // Let's pass clickedIncident state to MapContainer!
-    // Wait, let's just make it center by setting tempMarkerCoords briefly, or since MapContainer has a prop tempMarkerCoords, 
-    // we can set tempMarkerCoords to center!
-    // Let's pass targetCenterCoords state:
     setTempMarkerCoords({ lat, lng });
   };
 
@@ -143,10 +153,11 @@ export default function App() {
         onOpenLogin={handleOpenLogin}
         onTriggerReportMode={handleTriggerReportMode}
         reportMode={reportMode}
+        onSwitchDemoRole={handleSwitchDemoRole}
       />
 
       <Routes>
-        {/* Main interactive map view */}
+        {/* Main interactive map view (Citizen) */}
         <Route 
           path="/" 
           element={
@@ -184,6 +195,15 @@ export default function App() {
             </div>
           } 
         />
+
+        {/* Role 2: Moderator View */}
+        <Route path="/moderador" element={<ModeratorDashboard />} />
+
+        {/* Role 3: Analyst Intelligence Dashboard View */}
+        <Route path="/analitica" element={<AnalystDashboard />} />
+
+        {/* Role 4: System Admin User Management View */}
+        <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Incident Search Results */}
         <Route path="/search-incidents" element={<SearchResults incidents={incidents} searchType="incidents" />} />

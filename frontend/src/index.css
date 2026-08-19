@@ -607,3 +607,26 @@ h4 { font-size: 1rem; color: var(--green-success); }
     padding-top: var(--space-5);
   }
 }
+
+/* Dashboard & Role Utilities */
+.style-badge-purple {
+  background-color: var(--purple-info);
+  color: #FFFFFF;
+}
+
+.text-purple {
+  color: var(--purple-info);
+}
+
+.bg-navy-primary {
+  background-color: var(--navy-primary) !important;
+}
+
+.text-navy {
+  color: var(--navy-primary) !important;
+}
+
+.border-bottom-primary {
+  border-bottom: 3px solid var(--navy-primary) !important;
+}
+
