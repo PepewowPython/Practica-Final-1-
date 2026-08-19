@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mysql from 'mysql2/promise';
 
 dotenv.config();
 
@@ -16,6 +17,89 @@ const __dirname = path.dirname(__filename);
 const DB_PATH = path.join(__dirname, 'db.json');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rutas-inseguras-super-secret-key';
+const DB_CONFIG = {
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'rutas_inseguras_db',
+  waitForConnections: true,
+  connectionLimit: 10
+};
+
+let mariaDbPool = null;
+let mariaDbReady = false;
+
+async function initMariaDB() {
+  try {
+    const configuredFields = [process.env.DB_HOST, process.env.DB_PORT, process.env.DB_USER, process.env.DB_NAME];
+    if (!configuredFields.some(Boolean)) {
+      console.log('MariaDB not configured. Using local JSON database fallback.');
+      return;
+    }
+
+    mariaDbPool = mysql.createPool(DB_CONFIG);
+    const connection = await mariaDbPool.getConnection();
+    await connection.ping();
+    connection.release();
+    mariaDbReady = true;
+    console.log(`MariaDB connected to ${DB_CONFIG.database}@${DB_CONFIG.host}:${DB_CONFIG.port}`);
+  } catch (error) {
+    console.warn('MariaDB unavailable. Falling back to JSON database:', error.message);
+    mariaDbPool = null;
+    mariaDbReady = false;
+  }
+}
+
+await initMariaDB();
+
+function mapUserRow(row) {
+  return {
+    id: row.id_usuario ?? row.id,
+    name: row.nombre ?? row.name,
+    email: row.correo ?? row.email,
+    phone: row.telefono ?? '',
+    role: row.nombre_rol ?? row.role ?? 'Usuario Ciudadano',
+    contacts: []
+  };
+}
+
+async function findUserByEmailMaria(email) {
+  if (!mariaDbPool) return null;
+  const [rows] = await mariaDbPool.query(
+    `SELECT u.*, r.nombre_rol
+     FROM usuarios u
+     LEFT JOIN roles r ON r.id_rol = u.id_rol
+     WHERE LOWER(u.correo) = LOWER(?) LIMIT 1`,
+    [email]
+  );
+  return rows[0] || null;
+}
+
+async function createUserMaria({ name, email, password, phone }) {
+  if (!mariaDbPool) return null;
+
+  const [roleRows] = await mariaDbPool.query(
+    'SELECT id_rol FROM roles WHERE nombre_rol = ? LIMIT 1',
+    ['Usuario Ciudadano']
+  );
+
+  const roleId = roleRows[0]?.id_rol || 3;
+  const [result] = await mariaDbPool.query(
+    'INSERT INTO usuarios (nombre, correo, contrasena, telefono, estado, id_rol) VALUES (?, ?, ?, ?, ?, ?)',
+    [name, email.toLowerCase(), password, phone || '', 'activo', roleId]
+  );
+
+  const [rows] = await mariaDbPool.query(
+    `SELECT u.*, r.nombre_rol
+     FROM usuarios u
+     LEFT JOIN roles r ON r.id_rol = u.id_rol
+     WHERE u.id_usuario = ? LIMIT 1`,
+    [result.insertId]
+  );
+
+  return rows[0] || null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,6 +141,23 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
+    if (mariaDbReady) {
+      const existing = await findUserByEmailMaria(email);
+      if (existing) {
+        return res.status(400).json({ error: 'El correo ya está registrado' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const created = await createUserMaria({ name, email, password: hashedPassword, phone });
+      if (!created) {
+        return res.status(500).json({ error: 'No se pudo crear el usuario en MariaDB' });
+      }
+
+      const user = mapUserRow(created);
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(201).json({ token, user: { ...user, password: undefined } });
+    }
+
     const db = await readDB();
     const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) {
@@ -77,8 +178,6 @@ app.post('/api/auth/register', async (req, res) => {
     await writeDB(db);
 
     const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: '7d' });
-    
-    // Remove password before sending
     const { password: _, ...userWithoutPassword } = newUser;
     res.status(201).json({ token, user: userWithoutPassword });
   } catch (err) {
@@ -91,6 +190,22 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    if (mariaDbReady) {
+      const userRow = await findUserByEmailMaria(email);
+      if (!userRow) {
+        return res.status(400).json({ error: 'Credenciales inválidas' });
+      }
+
+      const isMatch = await bcrypt.compare(password, userRow.contrasena);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Credenciales inválidas' });
+      }
+
+      const user = mapUserRow(userRow);
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ token, user });
     }
 
     const db = await readDB();
@@ -136,6 +251,69 @@ app.post('/api/auth/contacts', async (req, res) => {
     res.json({ success: true, contacts: db.users[userIdx].contacts });
   } catch (err) {
     res.status(401).json({ error: 'Token inválido o expirado' });
+  }
+});
+
+app.post('/api/dev/test-user', async (req, res) => {
+  try {
+    const payload = {
+      name: req.body.name || 'Usuario Prueba',
+      email: req.body.email || 'prueba@rutasinseguras.com',
+      password: req.body.password || 'Prueba123!',
+      phone: req.body.phone || '3005551234'
+    };
+
+    if (mariaDbReady) {
+      const existing = await findUserByEmailMaria(payload.email);
+      if (existing) {
+        return res.status(200).json({
+          message: 'El usuario de prueba ya existe en MariaDB',
+          source: 'mariadb',
+          user: mapUserRow(existing)
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(payload.password, 10);
+      const created = await createUserMaria({
+        name: payload.name,
+        email: payload.email,
+        password: hashedPassword,
+        phone: payload.phone
+      });
+
+      return res.status(201).json({
+        message: 'Usuario de prueba creado en MariaDB',
+        source: 'mariadb',
+        user: mapUserRow(created)
+      });
+    }
+
+    const db = await readDB();
+    const existing = db.users.find(u => u.email.toLowerCase() === payload.email.toLowerCase());
+    if (existing) {
+      return res.status(200).json({ message: 'El usuario de prueba ya existía en JSON', source: 'json', user: existing });
+    }
+
+    const hashedPassword = await bcrypt.hash(payload.password, 10);
+    const newUser = {
+      id: String(Date.now()),
+      name: payload.name,
+      email: payload.email.toLowerCase(),
+      password: hashedPassword,
+      phone: payload.phone,
+      contacts: []
+    };
+
+    db.users.push(newUser);
+    await writeDB(db);
+
+    return res.status(201).json({
+      message: 'Usuario de prueba creado en JSON',
+      source: 'json',
+      user: { ...newUser, password: undefined }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error creando usuario de prueba', details: error.message });
   }
 });
 

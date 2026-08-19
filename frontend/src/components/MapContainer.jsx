@@ -37,12 +37,6 @@ export default function MapContainer({
       incidentsGroup.current = L.layerGroup().addTo(map);
       routeGroup.current = L.layerGroup().addTo(map);
       tempMarkerGroup.current = L.layerGroup().addTo(map);
-
-      // Event listener for clicks on the map
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        onMapClick(lat, lng);
-      });
     }
 
     return () => {
@@ -52,6 +46,23 @@ export default function MapContainer({
       }
     };
   }, []);
+
+  // Keep the map click handler synced with the latest parent state.
+  useEffect(() => {
+    const map = leafletMapInstance.current;
+    if (!map) return;
+
+    const handleMapClick = (e) => {
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    };
+
+    map.on('click', handleMapClick);
+
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [onMapClick]);
 
   // Update Zones layer
   useEffect(() => {
