@@ -1,0 +1,544 @@
+==============================================================================
+CONSULTAS DE BASE DE DATOS - PROYECTO RUTAS INSEGURAS
+Mapeo de la Matriz de Requerimientos (RF-01 a RF-16 / RI-01 a RI-16)
+Motor: MariaDB / MySQL (Base de datos: rutas_inseguras_db)
+==============================================================================
+
+------------------------------------------------------------------------------
+RF-01 / RI-01: GESTIÓN DE ROLES Y PERMISOS DE ACCESO (RBAC)
+Tabla: roles
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de roles
+CREATE TABLE roles (
+  id_rol INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único del rol',
+  nombre_rol VARCHAR(50) NOT NULL UNIQUE COMMENT 'Nombre del rol (ej: Administrador, Moderador, Usuario Ciudadano)',
+  descripcion TEXT NULL COMMENT 'Descripción detallada de los permisos',
+  nivel_acceso INT NOT NULL DEFAULT 1 COMMENT 'Nivel jerárquico (1: Usuario, 2: Moderador, 3: Admin)'
+) ENGINE=InnoDB COMMENT='Tabla de catálogo de roles del sistema';
+
+-- DML: Insertar roles predeterminados (Seed Data)
+INSERT INTO roles (id_rol, nombre_rol, descripcion, nivel_acceso) VALUES
+(1, 'Administrador', 'Control total del sistema, gestión de usuarios y configuraciones', 3),
+(2, 'Moderador', 'Validación de reportes ciudadanos e incidentes', 2),
+(3, 'Usuario Ciudadano', 'Uso de la app, consulta de rutas y reporte de incidentes', 1);
+
+-- CONSULTA: Obtener todos los roles disponibles
+SELECT id_rol, nombre_rol, nivel_acceso, descripcion 
+FROM roles 
+ORDER BY nivel_acceso ASC;
+
+
+------------------------------------------------------------------------------
+RF-02 / RI-02: GESTIÓN DE USUARIOS Y AUTENTICACIÓN
+Tabla: usuarios
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de usuarios
+CREATE TABLE usuarios (
+  id_usuario INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único del usuario',
+  nombre VARCHAR(100) NOT NULL COMMENT 'Nombre completo del usuario',
+  correo VARCHAR(150) NOT NULL UNIQUE COMMENT 'Correo electrónico (Login ID)',
+  contrasena VARCHAR(255) NOT NULL COMMENT 'Hash de contraseña (bcrypt)',
+  telefono VARCHAR(20) NULL COMMENT 'Teléfono de contacto',
+  estado ENUM('activo', 'inactivo', 'bloqueado') NOT NULL DEFAULT 'activo' COMMENT 'Estado de la cuenta',
+  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de creación',
+  id_rol INT NOT NULL COMMENT 'Clave foránea hacia tabla Roles',
+  CONSTRAINT fk_usuarios_roles FOREIGN KEY (id_rol) 
+    REFERENCES roles(id_rol) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Tabla principal de usuarios registrados';
+
+-- DML: Registro de nuevo usuario (Sign Up)
+INSERT INTO usuarios (nombre, correo, contrasena, telefono, estado, id_rol) 
+VALUES ('Jean Crespo', 'jean@ejemplo.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3022222222', 'activo', 3);
+
+-- CONSULTA: Autenticación de usuario por correo (Login)
+SELECT u.id_usuario, u.nombre, u.correo, u.contrasena, u.telefono, u.estado, r.nombre_rol, r.nivel_acceso
+FROM usuarios u
+LEFT JOIN roles r ON r.id_rol = u.id_rol
+WHERE LOWER(u.correo) = LOWER('jean@ejemplo.com') 
+LIMIT 1;
+
+-- CONSULTA: Listar todos los usuarios para el panel de administración
+SELECT u.id_usuario, u.nombre, u.correo, u.telefono, u.estado, u.fecha_registro, r.nombre_rol
+FROM usuarios u
+INNER JOIN roles r ON u.id_rol = r.id_rol
+ORDER BY u.fecha_registro DESC;
+
+-- DML: Actualizar datos de usuario / Cambiar rol o estado (Admin)
+UPDATE usuarios 
+SET nombre = 'Jean Crespo Actualizado', telefono = '3009998877', estado = 'activo', id_rol = 2 
+WHERE id_usuario = 3;
+
+-- DML: Eliminar usuario del sistema
+DELETE FROM usuarios 
+WHERE id_usuario = 3;
+
+
+------------------------------------------------------------------------------
+RF-03 / RI-03: UBICACIÓN Y GEOLOCALIZACIÓN EN TIEMPO REAL
+Tabla: ubicaciones
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de posiciones GPS
+CREATE TABLE ubicaciones (
+  id_ubicacion INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de registro de ubicación',
+  id_usuario INT NOT NULL COMMENT 'Usuario al que pertenece el registro',
+  latitud DECIMAL(10,8) NOT NULL COMMENT 'Coordenada Latitud GPS',
+  longitud DECIMAL(11,8) NOT NULL COMMENT 'Coordenada Longitud GPS',
+  fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp de la captura',
+  CONSTRAINT fk_ubicaciones_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Historial de geolocalización en tiempo real';
+
+-- DML: Guardar captura de posición GPS en tiempo real
+INSERT INTO ubicaciones (id_usuario, latitud, longitud, fecha_hora) 
+VALUES (3, 6.24530000, -75.56840000, CURRENT_TIMESTAMP);
+
+-- CONSULTA: Obtener la última posición conocida de un usuario
+SELECT id_ubicacion, id_usuario, latitud, longitud, fecha_hora
+FROM ubicaciones
+WHERE id_usuario = 3
+ORDER BY fecha_hora DESC
+LIMIT 1;
+
+-- CONSULTA: Consultar trayecto histórico de ubicaciones en un rango de fecha
+SELECT latitud, longitud, fecha_hora
+FROM ubicaciones
+WHERE id_usuario = 3 AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+ORDER BY fecha_hora ASC;
+
+
+------------------------------------------------------------------------------
+RF-04 / RI-04: CÁLCULO DE RUTAS SEGUDRAS Y EVALUACIÓN DE RIESGO
+Tabla: rutas
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de rutas
+CREATE TABLE rutas (
+  id_ruta INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de la consulta de ruta',
+  id_usuario INT NOT NULL COMMENT 'Usuario que consultó la ruta',
+  origen VARCHAR(255) NOT NULL COMMENT 'Dirección o punto de origen',
+  destino VARCHAR(255) NOT NULL COMMENT 'Dirección o punto de destino',
+  distancia DECIMAL(8,2) NOT NULL COMMENT 'Distancia total en kilómetros',
+  duracion_estimada_min INT NOT NULL DEFAULT 0 COMMENT 'Tiempo estimado en minutos',
+  nivel_riesgo ENUM('Bajo', 'Medio', 'Alto') NOT NULL DEFAULT 'Bajo' COMMENT 'Nivel global de riesgo',
+  fecha_consulta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha del cálculo',
+  CONSTRAINT fk_rutas_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Registro de rutas solicitadas y analizadas';
+
+-- DML: Registrar una consulta de ruta calculada
+INSERT INTO rutas (id_usuario, origen, destino, distancia, duracion_estimada_min, nivel_riesgo)
+VALUES (3, 'Universidad de Antioquia', 'Parque Lleras', 8.50, 25, 'Medio');
+
+-- CONSULTA: Obtener historial de rutas solicitadas por un usuario
+SELECT id_ruta, origen, destino, distancia, duracion_estimada_min, nivel_riesgo, fecha_consulta
+FROM rutas
+WHERE id_usuario = 3
+ORDER BY fecha_consulta DESC;
+
+
+------------------------------------------------------------------------------
+RF-05 / RI-05: RECOMENDACIÓN DE RUTAS ALTERNATIVAS
+Tabla: alternativas_ruta
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de alternativas de ruta
+CREATE TABLE alternativas_ruta (
+  id_alternativa INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de la ruta alternativa',
+  id_ruta INT NOT NULL COMMENT 'Ruta principal asociada',
+  descripcion TEXT NOT NULL COMMENT 'Detalles del trazado alternativo',
+  distancia_alt DECIMAL(8,2) NOT NULL COMMENT 'Distancia de la alternativa en km',
+  duracion_min INT NOT NULL COMMENT 'Duración estimada en minutos',
+  nivel_riesgo ENUM('Bajo', 'Medio', 'Alto') NOT NULL DEFAULT 'Bajo' COMMENT 'Nivel de riesgo',
+  CONSTRAINT fk_alternativas_rutas FOREIGN KEY (id_ruta) 
+    REFERENCES rutas(id_ruta) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Opciones alternativas de rutas con menor riesgo';
+
+-- DML: Guardar alternativa de ruta segura para evitar zona roja
+INSERT INTO alternativas_ruta (id_ruta, descripcion, distancia_alt, duracion_min, nivel_riesgo)
+VALUES (1, 'Desvío por Av. El Poblado evitando Parque de las Luces', 9.10, 28, 'Bajo');
+
+-- CONSULTA: Obtener opciones alternativas para una ruta específica
+SELECT id_alternativa, descripcion, distancia_alt, duracion_min, nivel_riesgo
+FROM alternativas_ruta
+WHERE id_ruta = 1;
+
+
+------------------------------------------------------------------------------
+RF-06 / RI-06: CATALOGACIÓN Y VISUALIZACIÓN DE ZONAS DE RIESGO
+Tabla: zonas_riesgo
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla de zonas de riesgo
+CREATE TABLE zonas_riesgo (
+  id_zona INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único de la zona peligrosa',
+  nombre_zona VARCHAR(150) NOT NULL COMMENT 'Nombre o barrio de la zona',
+  nivel_riesgo ENUM('Bajo', 'Medio', 'Alto') NOT NULL DEFAULT 'Alto' COMMENT 'Nivel de peligro',
+  latitud DECIMAL(10,8) NOT NULL COMMENT 'Latitud centro de la zona',
+  longitud DECIMAL(11,8) NOT NULL COMMENT 'Longitud centro de la zona',
+  radio_metros INT NOT NULL DEFAULT 500 COMMENT 'Radio de peligro en metros',
+  coordenadas TEXT NULL COMMENT 'Geometría JSON o polígono',
+  fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de registro'
+) ENGINE=InnoDB COMMENT='Catálogo de zonas geográficas clasificadas por riesgo';
+
+-- DML: Insertar zonas de riesgo iniciales (Seed Data)
+INSERT INTO zonas_riesgo (id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros) VALUES
+(1, 'Sector Parque de las Luces / San Antonio', 'Alto', 6.24530000, -75.56840000, 600),
+(2, 'Sector Prado Centro Norte', 'Medio', 6.25700000, -75.56500000, 450),
+(3, 'Alrededores Universidad de Antioquia (Noche)', 'Alto', 6.26290000, -75.56840000, 500);
+
+-- CONSULTA: Obtener todas las zonas de riesgo para dibujar capas en el mapa
+SELECT id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros, fecha_creacion
+FROM zonas_riesgo
+ORDER BY nivel_riesgo DESC;
+
+-- CONSULTA: Detectar si una coordenada GPS dada está cerca de una zona de riesgo
+SELECT id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros
+FROM zonas_riesgo
+WHERE (6371000 * ACOS(COS(RADIANS(6.2453)) * COS(RADIANS(latitud)) * COS(RADIANS(longitud) - RADIANS(-75.5684)) + SIN(RADIANS(6.2453)) * SIN(RADIANS(latitud)))) <= radio_metros;
+
+
+------------------------------------------------------------------------------
+RF-07 / RI-07: ACTUALIZACIÓN Y TRAZABILIDAD DEL NIVEL DE RIESGO
+Tabla: historial_riesgo
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla historial_riesgo
+CREATE TABLE historial_riesgo (
+  id_historial INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador del registro histórico',
+  id_zona INT NOT NULL COMMENT 'Zona asociada',
+  fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha del cambio',
+  nivel_riesgo_anterior ENUM('Bajo', 'Medio', 'Alto') NULL COMMENT 'Nivel previo',
+  nivel_riesgo_nuevo ENUM('Bajo', 'Medio', 'Alto') NOT NULL COMMENT 'Nuevo nivel',
+  motivo VARCHAR(255) NULL COMMENT 'Razón del cambio',
+  CONSTRAINT fk_historial_zonas FOREIGN KEY (id_zona) 
+    REFERENCES zonas_riesgo(id_zona) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Histórico de modificaciones en los niveles de riesgo de zonas';
+
+-- DML: Actualizar nivel de riesgo en la zona y registrar historial
+UPDATE zonas_riesgo 
+SET nivel_riesgo = 'Alto' 
+WHERE id_zona = 2;
+
+INSERT INTO historial_riesgo (id_zona, nivel_riesgo_anterior, nivel_riesgo_nuevo, motivo)
+VALUES (2, 'Medio', 'Alto', 'Incremento del 40% en reportes de hurto durante el último mes');
+
+-- CONSULTA: Consultar trazabilidad de modificaciones de nivel de riesgo
+SELECT h.id_historial, z.nombre_zona, h.nivel_riesgo_anterior, h.nivel_riesgo_nuevo, h.motivo, h.fecha_actualizacion
+FROM historial_riesgo h
+INNER JOIN zonas_riesgo z ON h.id_zona = z.id_zona
+ORDER BY h.fecha_actualizacion DESC;
+
+
+------------------------------------------------------------------------------
+RF-08 / RI-08: REGISTRO CIUDADANO DE INCIDENTES DE INSEGURIDAD
+Tabla: incidentes
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla incidentes
+CREATE TABLE incidentes (
+  id_incidente INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador del reporte',
+  id_usuario INT NOT NULL COMMENT 'Usuario que reporta',
+  tipo_incidente VARCHAR(100) NOT NULL COMMENT 'Categoría (Hurto, Acoso, Robo armado, etc.)',
+  descripcion TEXT NULL COMMENT 'Detalles acontecidos',
+  latitud DECIMAL(10,8) NOT NULL COMMENT 'Latitud donde ocurrió',
+  longitud DECIMAL(11,8) NOT NULL COMMENT 'Longitud donde ocurrió',
+  ubicacion VARCHAR(255) NOT NULL COMMENT 'Dirección de referencia',
+  fecha_reporte DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha del reporte',
+  estado ENUM('pendiente', 'aprobado', 'rechazado') NOT NULL DEFAULT 'pendiente' COMMENT 'Estado del reporte',
+  CONSTRAINT fk_incidentes_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Reportes ciudadanos de incidentes de inseguridad';
+
+-- DML: Registrar nuevo incidente reportado por un ciudadano
+INSERT INTO incidentes (id_usuario, tipo_incidente, descripcion, latitud, longitud, ubicacion, estado)
+VALUES (3, 'Hurtos de Celulares (Cosquilleo)', 'Robo de teléfono celular a transeúnte mientras esperaba transporte.', 6.24530000, -75.56840000, 'Parque Berrío / Calle 50', 'pendiente');
+
+-- CONSULTA: Listar incidentes pendientes para la cola de moderación
+SELECT i.id_incidente, u.nombre AS usuario_reportante, i.tipo_incidente, i.descripcion, i.ubicacion, i.latitud, i.longitud, i.fecha_reporte, i.estado
+FROM incidentes i
+INNER JOIN usuarios u ON i.id_usuario = u.id_usuario
+WHERE i.estado = 'pendiente'
+ORDER BY i.fecha_reporte DESC;
+
+-- CONSULTA: Listar incidentes aprobados para visualización comunitaria
+SELECT id_incidente, tipo_incidente, descripcion, latitud, longitud, ubicacion, fecha_reporte
+FROM incidentes
+WHERE estado = 'aprobado'
+ORDER BY fecha_reporte DESC;
+
+
+------------------------------------------------------------------------------
+RF-09 / RI-09: VERIFICACIÓN Y PUBLICACIÓN OFICIAL DE REPORTES
+Tabla: reportes
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla reportes
+CREATE TABLE reportes (
+  id_reporte INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de publicación',
+  id_incidente INT NOT NULL UNIQUE COMMENT 'Incidente validado asociado',
+  estado ENUM('publicado', 'archivado') NOT NULL DEFAULT 'publicado' COMMENT 'Estado de publicación',
+  fecha_publicacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de publicación oficial',
+  CONSTRAINT fk_reportes_incidentes FOREIGN KEY (id_incidente) 
+    REFERENCES incidentes(id_incidente) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Publicaciones visibles de incidentes verificados';
+
+-- DML: Publicar incidente verificado en la capa pública
+INSERT INTO reportes (id_incidente, estado, fecha_publicacion)
+VALUES (1, 'publicado', CURRENT_TIMESTAMP);
+
+-- CONSULTA: Obtener todos los reportes publicados oficialmente para el mapa
+SELECT r.id_reporte, i.id_incidente, i.tipo_incidente, i.descripcion, i.latitud, i.longitud, i.ubicacion, r.fecha_publicacion
+FROM reportes r
+INNER JOIN incidentes i ON r.id_incidente = i.id_incidente
+WHERE r.estado = 'publicado'
+ORDER BY r.fecha_publicacion DESC;
+
+
+------------------------------------------------------------------------------
+RF-10 / RI-10: ALERTAS PREVENTIVAS EN TIEMPO REAL
+Tabla: alertas
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla alertas
+CREATE TABLE alertas (
+  id_alerta INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único de la alerta',
+  id_usuario INT NOT NULL COMMENT 'Usuario destinatario',
+  tipo_alerta VARCHAR(100) NOT NULL COMMENT 'Tipo de alerta',
+  descripcion TEXT NOT NULL COMMENT 'Mensaje preventivo enviado',
+  fecha_alerta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Momento de emisión',
+  estado ENUM('enviada', 'leida', 'descartada') NOT NULL DEFAULT 'enviada' COMMENT 'Estado de lectura',
+  CONSTRAINT fk_alertas_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Notificaciones de alerta preventivas generadas en tiempo real';
+
+-- DML: Disparar alerta preventiva a usuario al ingresar a zona peligrosa
+INSERT INTO alertas (id_usuario, tipo_alerta, descripcion, estado)
+VALUES (3, 'Aproximación a Zona Roja', 'Atención: Te estás aproximando al Sector Parque de las Luces. Mantén tus pertenencias seguras.', 'enviada');
+
+-- CONSULTA: Obtener notificaciones activas / no leídas de un usuario
+SELECT id_alerta, tipo_alerta, descripcion, fecha_alerta, estado
+FROM alertas
+WHERE id_usuario = 3 AND estado != 'descartada'
+ORDER BY fecha_alerta DESC;
+
+-- DML: Marcar alerta como leída por el usuario
+UPDATE alertas 
+SET estado = 'leida' 
+WHERE id_alerta = 1 AND id_usuario = 3;
+
+
+------------------------------------------------------------------------------
+RF-11 / RI-11: CONFIGURACIÓN DE PREFERENCIAS DE NOTIFICACIÓN
+Tabla: preferencias_alertas
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla preferencias_alertas
+CREATE TABLE preferencias_alertas (
+  id_preferencia INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de preferencia',
+  id_usuario INT NOT NULL COMMENT 'Usuario propietario',
+  tipo_alerta VARCHAR(100) NOT NULL COMMENT 'Categoría de alerta',
+  estado TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = Habilitada, 0 = Deshabilitada',
+  CONSTRAINT fk_preferencias_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Configuraciones personalizadas de notificación por usuario';
+
+-- DML: Guardar o actualizar preferencia de alerta
+INSERT INTO preferencias_alertas (id_usuario, tipo_alerta, estado)
+VALUES (3, 'Zonas de Alto Riesgo', 1)
+ON DUPLICATE KEY UPDATE estado = VALUES(estado);
+
+-- CONSULTA: Cargar configuración de alertas del usuario
+SELECT id_preferencia, tipo_alerta, estado
+FROM preferencias_alertas
+WHERE id_usuario = 3;
+
+
+------------------------------------------------------------------------------
+RF-12 / RI-12: GESTIÓN DE CONTACTOS DE CONFIANZA Y RED DE EMERGENCIA
+Tabla: contactos_confianza
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla contactos_confianza
+CREATE TABLE contactos_confianza (
+  id_contacto INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador del contacto',
+  id_usuario INT NOT NULL COMMENT 'Usuario propeitario',
+  nombre_contacto VARCHAR(100) NOT NULL COMMENT 'Nombre completo del contacto',
+  telefono VARCHAR(20) NOT NULL COMMENT 'Número telefónico',
+  relacion VARCHAR(50) NULL COMMENT 'Parentesco o relación',
+  CONSTRAINT fk_contactos_usuarios FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Red de contactos de emergencia de los usuarios';
+
+-- DML: Añadir contacto de emergencia
+INSERT INTO contactos_confianza (id_usuario, nombre_contacto, telefono, relacion)
+VALUES (3, 'María Crespo', '3109876543', 'Familiar');
+
+-- CONSULTA: Obtener directorio de contactos de confianza de un usuario
+SELECT id_contacto, nombre_contacto, telefono, relacion
+FROM contactos_confianza
+WHERE id_usuario = 3;
+
+-- DML: Eliminar contacto de emergencia
+DELETE FROM contactos_confianza 
+WHERE id_contacto = 1 AND id_usuario = 3;
+
+
+------------------------------------------------------------------------------
+RF-13 / RI-13: MONITOREO Y MONITOREO EN TIEMPO REAL (COMPARTIR UBICACIÓN)
+Tabla: ubicaciones_compartidas
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla ubicaciones_compartidas
+CREATE TABLE ubicaciones_compartidas (
+  id_compartido INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de sesión compartida',
+  id_usuario INT NOT NULL COMMENT 'Usuario que comparte trayecto',
+  id_contacto INT NOT NULL COMMENT 'Contacto receptor autorizado',
+  fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Inicio de seguimiento',
+  fecha_fin DATETIME NULL COMMENT 'Fin de seguimiento',
+  estado ENUM('activa', 'finalizada') NOT NULL DEFAULT 'activa' COMMENT 'Estado del seguimiento',
+  CONSTRAINT fk_compartido_usuario FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_compartido_contacto FOREIGN KEY (id_contacto) 
+    REFERENCES contactos_confianza(id_contacto) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Sesiones activas e históricas de ubicación compartida';
+
+-- DML: Iniciar sesión de monitoreo con un contacto de confianza
+INSERT INTO ubicaciones_compartidas (id_usuario, id_contacto, fecha_inicio, estado)
+VALUES (3, 1, CURRENT_TIMESTAMP, 'activa');
+
+-- DML: Finalizar sesión de monitoreo
+UPDATE ubicaciones_compartidas 
+SET fecha_fin = CURRENT_TIMESTAMP, estado = 'finalizada'
+WHERE id_compartido = 1;
+
+-- CONSULTA: Consultar sesiones de seguimiento activas con detalles del contacto
+SELECT uc.id_compartido, u.nombre AS emisor, c.nombre_contacto AS receptor, c.telefono, uc.fecha_inicio, uc.estado
+FROM ubicaciones_compartidas uc
+INNER JOIN usuarios u ON uc.id_usuario = u.id_usuario
+INNER JOIN contactos_confianza c ON uc.id_contacto = c.id_contacto
+WHERE uc.estado = 'activa';
+
+
+------------------------------------------------------------------------------
+RF-14 / RI-14: MODERACIÓN Y AUDITORÍA DE REPORTES CIUDADANOS
+Tabla: moderacion_reportes
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla moderacion_reportes
+CREATE TABLE moderacion_reportes (
+  id_moderacion INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de moderación',
+  id_incidente INT NOT NULL COMMENT 'Incidente revisado',
+  id_moderador INT NOT NULL COMMENT 'Moderador o Admin encargado',
+  estado_revision ENUM('aprobado', 'rechazado', 'requiere_cambios') NOT NULL COMMENT 'Dictamen',
+  observaciones TEXT NULL COMMENT 'Comentarios de revisión',
+  fecha_revision DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Momento de revisión',
+  CONSTRAINT fk_moderacion_incidente FOREIGN KEY (id_incidente) 
+    REFERENCES incidentes(id_incidente) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_moderacion_moderador FOREIGN KEY (id_moderador) 
+    REFERENCES usuarios(id_usuario) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Registro de auditoría y revisión de reportes ciudadanos';
+
+-- DML: Registrar veredicto de moderación
+INSERT INTO moderacion_reportes (id_incidente, id_moderador, estado_revision, observaciones)
+VALUES (1, 2, 'aprobado', 'Verificado y contrastado con cuadrante policial local.');
+
+-- DML: Actualizar estado en la tabla de incidentes
+UPDATE incidentes 
+SET estado = 'aprobado' 
+WHERE id_incidente = 1;
+
+-- CONSULTA: Consultar historial de moderaciones realizadas por moderador
+SELECT m.id_moderacion, i.tipo_incidente, i.ubicacion, u.nombre AS moderador, m.estado_revision, m.observaciones, m.fecha_revision
+FROM moderacion_reportes m
+INNER JOIN incidentes i ON m.id_incidente = i.id_incidente
+INNER JOIN usuarios u ON m.id_moderador = u.id_usuario
+ORDER BY m.fecha_revision DESC;
+
+
+------------------------------------------------------------------------------
+RF-15 / RI-15 / RNF-11: AUDITORÍA Y TRAZABILIDAD TÉCNICA DEL SISTEMA
+Tabla: auditoria
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla auditoria
+CREATE TABLE auditoria (
+  id_auditoria INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador de evento de auditoría',
+  id_usuario INT NULL COMMENT 'Usuario responsable (NULL si es proceso del sistema)',
+  accion VARCHAR(100) NOT NULL COMMENT 'Operación ejecutada',
+  detalles TEXT NULL COMMENT 'Detalles técnicos o JSON',
+  fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Momento exacto',
+  CONSTRAINT fk_auditoria_usuario FOREIGN KEY (id_usuario) 
+    REFERENCES usuarios(id_usuario) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB COMMENT='Bitácora de seguridad y auditoría general del sistema';
+
+-- TRIGGERS DE AUTOMATIZACIÓN DE AUDITORÍA
+DELIMITER //
+
+CREATE TRIGGER trg_auditoria_nuevo_usuario
+AFTER INSERT ON usuarios
+FOR EACH ROW
+BEGIN
+  INSERT INTO auditoria (id_usuario, accion, detalles)
+  VALUES (NEW.id_usuario, 'REGISTRO_USUARIO', CONCAT('Usuario registrado: ', NEW.correo));
+END;
+//
+
+CREATE TRIGGER trg_auditoria_nuevo_incidente
+AFTER INSERT ON incidentes
+FOR EACH ROW
+BEGIN
+  INSERT INTO auditoria (id_usuario, accion, detalles)
+  VALUES (NEW.id_usuario, 'INCIDENTE_REPORTADO', CONCAT('Tipo: ', NEW.tipo_incidente, ' en ', NEW.ubicacion));
+END;
+//
+
+DELIMITER ;
+
+-- CONSULTA: Consultar la bitácora de auditoría del sistema
+SELECT a.id_auditoria, COALESCE(u.correo, 'SISTEMA') AS ejecutado_por, a.accion, a.detalles, a.fecha_hora
+FROM auditoria a
+LEFT JOIN usuarios u ON a.id_usuario = u.id_usuario
+ORDER BY a.fecha_hora DESC
+LIMIT 100;
+
+
+------------------------------------------------------------------------------
+RF-16 / RI-16: ESTADÍSTICAS, MÉTRICAS Y ANALÍTICA DE SEGURIDAD
+Tabla: estadisticas
+------------------------------------------------------------------------------
+-- DDL: Creación de la tabla estadisticas
+CREATE TABLE estadisticas (
+  id_estadistica INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador del informe',
+  tipo_reporte VARCHAR(100) NOT NULL COMMENT 'Nombre del reporte',
+  fecha_generacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de cálculo',
+  resultado JSON NOT NULL COMMENT 'Métricas analíticas en formato JSON'
+) ENGINE=InnoDB COMMENT='Informes consolidados y métricas de seguridad';
+
+-- DML: Guardar consolidado analítico en formato JSON
+INSERT INTO estadisticas (tipo_reporte, resultado) VALUES
+('Consolidado Mensual de Incidentes', '{"mes": "Julio 2026", "total_incidentes": 3, "tipo_mas_frecuente": "Hurtos de Celulares", "zona_mayor_riesgo": "Parque de las Luces"}');
+
+-- CONSULTA ANALÍTICA 1: Conteo de incidentes por categoría/tipo
+SELECT tipo_incidente, COUNT(*) AS total_incidentes, MAX(fecha_reporte) AS ultimo_reporte
+FROM incidentes
+WHERE estado = 'aprobado'
+GROUP BY tipo_incidente
+ORDER BY total_incidentes DESC;
+
+-- CONSULTA ANALÍTICA 2: Distribución de incidentes por franja horaria
+SELECT 
+  CASE 
+    WHEN HOUR(fecha_reporte) BETWEEN 6 AND 11 THEN 'Mañana (06:00 - 11:59)'
+    WHEN HOUR(fecha_reporte) BETWEEN 12 AND 17 THEN 'Tarde (12:00 - 17:59)'
+    WHEN HOUR(fecha_reporte) BETWEEN 18 AND 23 THEN 'Noche (18:00 - 23:59)'
+    ELSE 'Madrugada (00:00 - 05:59)'
+  END AS franja_horaria,
+  COUNT(*) AS total_incidentes
+FROM incidentes
+GROUP BY franja_horaria
+ORDER BY total_incidentes DESC;
+
+-- CONSULTA ANALÍTICA 3: Resumen general de incidentes por estado
+SELECT 
+  COUNT(*) AS total_registrados,
+  SUM(CASE WHEN estado = 'aprobado' THEN 1 ELSE 0 END) AS aprobados,
+  SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) AS pendientes,
+  SUM(CASE WHEN estado = 'rechazado' THEN 1 ELSE 0 END) AS rechazados
+FROM incidentes;
+
+-- CONSULTA DE INFORMES HISTÓRICOS GENERADOS
+SELECT id_estadistica, tipo_reporte, fecha_generacion, resultado
+FROM estadisticas
+ORDER BY fecha_generacion DESC;
+
+==============================================================================
+FIN DEL ARCHIVO DE CONSULTAS SQL
+==============================================================================
