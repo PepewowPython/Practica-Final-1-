@@ -1,0 +1,68 @@
+================================================================================
+            PROYECTO "RUTAS INSEGURAS" - MEDELLÍN
+    5. MARCO LEGAL Y CONSIDERACIONES DE CUMPLIMIENTO REGULATORIO (COLOMBIA)
+================================================================================
+
+5. Marco Legal y Consideraciones de Cumplimiento
+
+El proyecto "Rutas Inseguras" —plataforma tecnológica de movilidad preventiva y seguridad ciudadana en la ciudad de Medellín— se rige estrictamente bajo el ordenamiento jurídico de la República de Colombia. El desarrollo, arquitectura de software, gestión de base de datos (`rutas_inseguras_db`) y operación en tiempo real del sistema se estructuran sobre cuatro pilares legales fundamentales:
+
+1. Protección de Datos Personales, Sensibles y Geolocalización en Tiempo Real.
+2. Ciberseguridad, Control de Acceso (RBAC) e Integridad de la Información.
+3. Comercio Electrónico, Validez de Mensajes de Datos y Firma Digital de Sesiones.
+4. Régimen de Responsabilidad, Moderación de Contenidos Ciudadanos y Transparencia.
+
+================================================================================
+I. MARCO NORMATIVO COLOMBIANO APLICABLE Y VINCULACIÓN AL PROYECTO
+================================================================================
+
+1. LEY ESTATUTARIA 1581 DE 2012 Y DECRETO 1377 DE 2013
+   (Protección de Datos Personales y Habeas Data)
+   - Aplicación en el Proyecto: Rige el tratamiento automatizado de los datos de registro de usuarios (`usuarios`, HU-02), credenciales de autenticación y la gestión de la red de emergencia (`contactos_confianza`, RI-12).
+   - Datos Sensibles y Geolocalización: De conformidad con los Artículos 5 y 6 de la Ley 1581 de 2012, las coordenadas GPS capturadas de los dispositivos (`ubicaciones`, `ubicaciones_compartidas`, BPM-05, BPM-06) constituyen datos de carácter sensible y privado al revelar patrones continuos de desplazamiento. El sistema exige la autorización previa, expresa e informada del titular para la recolección de su posición en tiempo real, garantizando el ejercicio continuo de los derechos ARCO (Acceso, Rectificación, Cancelación y Oposición).
+
+2. LEY 1273 DE 2009
+   (De los Delitos Informáticos y Protección de la Información)
+   - Acceso Abusivo a Sistema Informático (Art. 269A): Respalda la implementación del modelo de Control de Acceso Basado en Roles (RBAC) del sistema (HU-01, RNF-02), restringiendo por token JWT los módulos administrativos (`/admin`), analíticos y de moderación frente a accesos no autorizados.
+   - Violación de Datos Personales (Art. 269F): Penaliza cualquier sustracción, interceptación o divulgación no autorizada de las tablas de usuarios, hash de contraseñas (Bcrypt) o directorios de contactos de pánico.
+
+3. LEY 527 DE 1999
+   (Comercio Electrónico, Mensajes de Datos y Firmas Digitales)
+   - Validez Probatoria de Mensajes de Datos: Garantiza plena validez jurídica a las interacciones electrónicas procesadas entre la interfaz cliente (Vite/React) y la API servidora (Node.js/Express), incluyendo los tokens firmados mediante JSON Web Token (JWT), las solicitudes HTTP REST y los registros inmutables de auditoría técnica (`auditoria`, RI-15, RNF-08).
+
+4. LEY 1480 DE 2011 (ESTATUTO DEL CONSUMIDOR) Y CÓDIGO CIVIL COLOMBIANO (ART. 1616)
+   (Información Veraz, Transparencia e Imputabilidad de Responsabilidad)
+   - Información Veraz y Suficiente (Arts. 23 y 24): Obliga a suministrar al usuario información transparente sobre la naturaleza probabilística y algorítmica de la aplicación (Motor Haversine / OSRM Routing, BPM-02, HU-05).
+   - Delimitación del Alcance Operativo: El sistema opera bajo la figura de exención de responsabilidad por hecho de un tercero, fuerza mayor o caso fortuito. Las recomendaciones de desvío y cálculo de riesgo constituyen una herramienta preventiva y colaborativa de orientación ciudadana que en ningún caso sustituye las funciones institucionales de la Policía Nacional, la Fiscalía General ni asume la posición de garante de la seguridad pública del usuario.
+
+5. CÓDIGO PENAL COLOMBIANO - LEY 599 DE 2000 (ARTS. 220 Y 221 - INJURIA Y CALUMNIA)
+   (Fundamentación Legal del Flujo de Moderación de Contenido)
+   - Verificación de Reportes Ciudadanos: Sustenta legalmente el Proceso de Moderación (BPM-04, HU-04, `moderacion_reportes`). El sistema impone un filtro de validación obligatorio previo a la publicación de incidentes en el mapa público (`reportes.estado = 'publicado'`), previniendo la divulgación de falsas alarmas, imputaciones difamatorias contra personas o establecimientos comerciales, y el pánico injustificado en la comunidad.
+
+6. LEY 1712 DE 2014
+   (Transparencia y Acceso a la Información Pública Nacional)
+   - Estándares para el consumo de datos abiertos y la estructuración de informes estadísticos y tableros analíticos (`estadisticas`, HU-06), permitiendo la exportación en formatos legibles por máquina (CSV/JSON) para la toma de decisiones comunitarias y de autoridades locales.
+
+================================================================================
+II. MATRIZ DE CUMPLIMIENTO TÉCNICO-LEGAL POR MÓDULO DEL SISTEMA
+================================================================================
+
+1. Módulo: Autenticación, Perfiles y Roles (RBAC)
+   - Normativa: Ley 1581/2012, Ley 1273/2009 (Art. 269A).
+   - Componentes Base: Tablas `roles`, `usuarios`, `auditoria`; Historias HU-01, HU-02; RNF-01, RNF-02.
+   - Mecanismos de Cumplimiento: Cifrado unidireccional de contraseñas mediante algoritmo Bcrypt (factor de costo 10), expiración automática de tokens JWT a los 7 días e invalidación de sesión ante suspensión de cuenta.
+
+2. Módulo: Geoprevención y Ruteo Inteligente
+   - Normativa: Ley 1480/2011 (Arts. 23, 24), Código Civil Art. 1616.
+   - Componentes Base: Tablas `rutas`, `alternativas_ruta`, `zonas_riesgo`; Proceso BPM-02; Historia HU-05.
+   - Mecanismos de Cumplimiento: Algoritmo transparente de ponderación espacial que desvía al usuario de zonas con puntaje de riesgo elevado (>= 5.0) y aplica multiplicadores de tiempo según franjas horarias y congestión vial.
+
+3. Módulo: Crowdsourcing de Incidentes y Moderación
+   - Normativa: Ley 599/2000 (Arts. 220, 221), Ley 527/1999.
+   - Componentes Base: Tablas `incidentes`, `reportes`, `moderacion_reportes`; Procesos BPM-03, BPM-04; Historia HU-04.
+   - Mecanismos de Cumplimiento: Trazabilidad de decisiones de moderadores en estado `pendiente`, `aprobado` y `rechazado`, anonimización opcional de la identidad del denunciante y registro de auditoría de cada dictamen.
+
+4. Módulo: Red de Confianza y Alertas SOS de Emergencia
+   - Normativa: Ley 1581/2012 (Arts. 5, 6 - Datos Sensibles), Ley 1273/2009 (Art. 269F).
+   - Componentes Base: Tablas `contactos_confianza`, `ubicaciones_compartidas`, `alertas`; Procesos BPM-05, BPM-06; Historias HU-02, HU-03.
+   - Mecanismos de Cumplimiento: Cifrado de datos en tránsito (HTTPS/SSL), autorización explícita para la activación del pánico SOS y desvinculación de la sesión de seguimiento en el instante en que el usuario detiene la transmisión.
