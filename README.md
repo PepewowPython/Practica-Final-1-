@@ -43,6 +43,7 @@ Practica-Final-1-/
 │   ├── Matriz_Rutas_Seguras 5_09_2026.xlsx  # Matriz actualizada de requerimientos e indicadores
 │   ├── INSTRUCCIONES_LANZAMIENTO.txt        # Guía detallada de despliegue y solución de problemas
 │   ├── BPM_Proyecto_Rutas_Inseguras.md      # Especificación BPMN 2.0 y diagramas de procesos
+│   ├── Licitacion_de_Requerimientos.md      # Pliego técnico y criterios de contratación
 │   ├── Mapa_de_Navegacion.md                 # Mapa de navegación de vistas, roles y flujos
 │   ├── Historias_de_Usuario_Rutas_Inseguras.md # Historias de usuario (HU) con validaciones y RN
 │   ├── DICCIONARIO_BASE_DE_DATOS.md         # Diccionario de base de datos (copia sincronizada)
