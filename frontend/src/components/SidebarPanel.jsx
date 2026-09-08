@@ -350,6 +350,65 @@ export default function SidebarPanel({
               <div className="bg-white p-3 rounded shadow-sm">
                 <h5 className="mb-3 text-center">{isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión'}</h5>
                 
+                {/* Selector de Tipo de Usuario para Autenticación Segmentada */}
+                {!isRegistering && (
+                  <div className="mb-3">
+                    <label className="form-label-custom mb-1" style={{ fontSize: '11px', color: 'var(--navy-primary)' }}>
+                      Ingresar por Tipo de Usuario:
+                    </label>
+                    <div className="btn-group w-100 mb-2 flex-wrap" role="group">
+                      <button 
+                        type="button" 
+                        className={`btn btn-xs py-1 px-2 ${authEmail === 'jean@ejemplo.com' || (!authEmail && !authPassword) ? 'btn-primary' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: '11px' }}
+                        onClick={() => {
+                          setAuthEmail('jean@ejemplo.com');
+                          setAuthPassword('Prueba123!');
+                          setAuthError('');
+                        }}
+                      >
+                        👤 Ciudadano
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn btn-xs py-1 px-2 ${authEmail === 'moderador@rutasinseguras.com' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: '11px' }}
+                        onClick={() => {
+                          setAuthEmail('moderador@rutasinseguras.com');
+                          setAuthPassword('Prueba123!');
+                          setAuthError('');
+                        }}
+                      >
+                        🛡️ Moderador
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn btn-xs py-1 px-2 ${authEmail === 'analista@rutasinseguras.com' ? 'btn-info text-white font-weight-bold' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: '11px' }}
+                        onClick={() => {
+                          setAuthEmail('analista@rutasinseguras.com');
+                          setAuthPassword('Prueba123!');
+                          setAuthError('');
+                        }}
+                      >
+                        📊 Analista
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn btn-xs py-1 px-2 ${authEmail === 'admin@rutasinseguras.com' ? 'btn-purple text-white font-weight-bold' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: '11px', backgroundColor: authEmail === 'admin@rutasinseguras.com' ? '#6B21A8' : undefined, color: authEmail === 'admin@rutasinseguras.com' ? 'white' : undefined }}
+                        onClick={() => {
+                          setAuthEmail('admin@rutasinseguras.com');
+                          setAuthPassword('Prueba123!');
+                          setAuthError('');
+                        }}
+                      >
+                        👑 Admin
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {authError && (
                   <div className="alert alert-danger p-2 small" role="alert">
                     {authError}
@@ -388,6 +447,7 @@ export default function SidebarPanel({
                       className="form-input-custom"
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="usuario@ejemplo.com"
                       required
                     />
                   </div>

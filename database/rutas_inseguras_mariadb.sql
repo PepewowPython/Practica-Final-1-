@@ -276,14 +276,16 @@ DELIMITER ;
 INSERT INTO roles (id_rol, nombre_rol, descripcion, nivel_acceso) VALUES
 (1, 'Administrador', 'Control total del sistema, gestión de usuarios y configuraciones', 3),
 (2, 'Moderador', 'Validación de reportes ciudadanos e incidentes', 2),
-(3, 'Usuario Ciudadano', 'Uso de la app, consulta de rutas y reporte de incidentes', 1);
+(3, 'Usuario Ciudadano', 'Uso de la app, consulta de rutas y reporte de incidentes', 1),
+(4, 'Analista de Seguridad', 'Acceso al centro de inteligencia y analítica, métricas y reportes agregados', 2);
 
 -- 2. Usuarios
 INSERT INTO usuarios (id_usuario, nombre, correo, contrasena, telefono, estado, id_rol) VALUES
 (1, 'Admin Sistema', 'admin@rutasinseguras.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3000000000', 'activo', 1),
 (2, 'Moderador Medellín', 'moderador@rutasinseguras.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3011111111', 'activo', 2),
 (3, 'Jean Crespo', 'jean@ejemplo.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3022222222', 'activo', 3),
-(4, 'Samuel Pérez', 'samuel@ejemplo.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3033333333', 'activo', 3);
+(4, 'Analista Seguridad', 'analista@rutasinseguras.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3044444444', 'activo', 4),
+(5, 'Samuel Pérez', 'samuel@ejemplo.com', '$2a$10$e8w.R/X/0.q.3G3WzZ1JceP7Q.K1O8Z4v5w9.e6V3l8F9.', '3033333333', 'activo', 3);
 
 -- 3. Zonas de Riesgo en Medellín
 INSERT INTO zonas_riesgo (id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros) VALUES

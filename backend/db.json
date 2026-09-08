@@ -39,8 +39,16 @@
       "role": "Usuario Ciudadano",
       "status": "activo",
       "contacts": [
-        { "name": "María Crespo", "phone": "3109876543", "relacion": "Familiar" },
-        { "name": "Carlos Gómez", "phone": "3201234567", "relacion": "Amigo" }
+        {
+          "name": "María Crespo",
+          "phone": "3109876543",
+          "relacion": "Familiar"
+        },
+        {
+          "name": "Carlos Gómez",
+          "phone": "3201234567",
+          "relacion": "Amigo"
+        }
       ]
     },
     {
@@ -52,7 +60,39 @@
       "role": "Usuario Ciudadano",
       "status": "activo",
       "contacts": [
-        { "name": "Mamá", "phone": "3109876543" }
+        {
+          "name": "Mamá",
+          "phone": "3109876543"
+        }
+      ]
+    },
+    {
+      "id": "1788657583975",
+      "name": "Usuario Pruebas QA",
+      "email": "qa_1788657583856@rutas.com",
+      "password": "$2a$10$FrkHZMYmg0eGq/p4UJ/2JOZuKzvKfUQX3AUCKu2FA8rLmuM.HkD.u",
+      "phone": "3001234567",
+      "contacts": []
+    },
+    {
+      "id": "1788657600118",
+      "name": "Usuario Pruebas QA",
+      "email": "qa_1788657600003@rutas.com",
+      "password": "$2a$10$XX3we.TgXQZ3DQx//FcA6uCvA17BA/jFhLA3R.695GtoXs.s.IpiS",
+      "phone": "3001234567",
+      "contacts": []
+    },
+    {
+      "id": "1788657628563",
+      "name": "Usuario Pruebas QA",
+      "email": "qa_1788657628446@rutas.com",
+      "password": "$2a$10$n1sgW68xz11vbQeTm8FnuO/NnX.XeJPH7I7sSNYk6n8d5zfArCj9K",
+      "phone": "3001234567",
+      "contacts": [
+        {
+          "name": "Contacto SOS QA",
+          "phone": "3109998877"
+        }
       ]
     }
   ],
@@ -101,8 +141,8 @@
       "title": "Luminaria Fundida y Tramo Oscuro",
       "type": "Iluminación",
       "description": "Falta de alumbrado público en tramo peatonal de 200 metros, genera alta inseguridad.",
-      "latitude": 6.2570,
-      "longitude": -75.5650,
+      "latitude": 6.257,
+      "longitude": -75.565,
       "ubicacion": "Prado Centro - Calle 62",
       "date": "2026-08-19T01:10:00.000Z",
       "reportedBy": "Anónimo",
@@ -134,6 +174,45 @@
       "reportedBy": "Anónimo",
       "status": "rechazado",
       "notes": "Desestimado tras verificación policial."
+    },
+    {
+      "id": "inc-1788657584628",
+      "title": "Hurto de Prueba QA",
+      "type": "Hurto",
+      "description": "Reporte para prueba de integración",
+      "latitude": 6.2453,
+      "longitude": -75.5684,
+      "ubicacion": "Parque Berrío",
+      "date": "2026-09-06T01:19:44.628Z",
+      "reportedBy": "Anónimo",
+      "status": "pendiente",
+      "notes": "Pendiente de moderación comunitaria"
+    },
+    {
+      "id": "inc-1788657600749",
+      "title": "Hurto de Prueba QA",
+      "type": "Hurto",
+      "description": "Reporte para prueba de integración",
+      "latitude": 6.2453,
+      "longitude": -75.5684,
+      "ubicacion": "Parque Berrío",
+      "date": "2026-09-06T01:20:00.749Z",
+      "reportedBy": "Anónimo",
+      "status": "pendiente",
+      "notes": "Pendiente de moderación comunitaria"
+    },
+    {
+      "id": "inc-1788657629201",
+      "title": "Hurto de Prueba QA",
+      "type": "Hurto",
+      "description": "Reporte para prueba de integración",
+      "latitude": 6.2453,
+      "longitude": -75.5684,
+      "ubicacion": "Parque Berrío",
+      "date": "2026-09-06T01:20:29.201Z",
+      "reportedBy": "Anónimo",
+      "status": "pendiente",
+      "notes": "Pendiente de moderación comunitaria"
     }
   ],
   "zones": [
@@ -152,8 +231,8 @@
       "name": "Sector Prado Centro Norte",
       "level": "medio",
       "color": "#F0C862",
-      "latitude": 6.2570,
-      "longitude": -75.5650,
+      "latitude": 6.257,
+      "longitude": -75.565,
       "radius": 450,
       "description": "Zona residencial patrimonial con calles solitarias en las noches. Riesgo moderado de hurtos y escaso alumbrado."
     },

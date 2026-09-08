@@ -1,0 +1,57 @@
+==============================================================================
+CONSULTAS DE CONSULTA Y LECTURA (SELECT) POR REQUISITO DE INFORMACIÓN
+(Asumiendo base de datos existente con datos poblados)
+==============================================================================
+
+RI-01: Gestión de Roles y Permisos (Tabla: roles)
+SELECT id_rol, nombre_rol, nivel_acceso, descripcion FROM roles ORDER BY nivel_acceso ASC; -- Incluye: (1: Administrador, 2: Moderador, 3: Usuario Ciudadano, 4: Analista de Seguridad)
+
+RI-02: Gestión de Usuarios y Autenticación (Tabla: usuarios)
+SELECT u.id_usuario, u.nombre, u.correo, u.contrasena, u.telefono, u.estado, r.nombre_rol FROM usuarios u LEFT JOIN roles r ON r.id_rol = u.id_rol WHERE LOWER(u.correo) = LOWER(?) LIMIT 1;
+SELECT u.id_usuario, u.nombre, u.correo, u.telefono, u.estado, u.fecha_registro, r.nombre_rol FROM usuarios u INNER JOIN roles r ON u.id_rol = r.id_rol ORDER BY u.fecha_registro DESC;
+
+RI-03: Ubicación y Geolocalización en Tiempo Real (Tabla: ubicaciones)
+SELECT id_ubicacion, id_usuario, latitud, longitud, fecha_hora FROM ubicaciones WHERE id_usuario = ? ORDER BY fecha_hora DESC LIMIT 1;
+SELECT latitud, longitud, fecha_hora FROM ubicaciones WHERE id_usuario = ? AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY fecha_hora ASC;
+
+RI-04: Cálculo de Rutas Seguras (Tabla: rutas)
+SELECT id_ruta, origen, destino, distancia, duracion_estimada_min, nivel_riesgo, fecha_consulta FROM rutas WHERE id_usuario = ? ORDER BY fecha_consulta DESC;
+
+RI-05: Recomendación de Rutas Alternativas (Tabla: alternativas_ruta)
+SELECT id_alternativa, descripcion, distancia_alt, duracion_min, nivel_riesgo FROM alternativas_ruta WHERE id_ruta = ?;
+
+RI-06: Catalogación y Visualización de Zonas de Riesgo (Tabla: zonas_riesgo)
+SELECT id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros, fecha_creacion FROM zonas_riesgo ORDER BY nivel_riesgo DESC;
+SELECT id_zona, nombre_zona, nivel_riesgo, latitud, longitud, radio_metros FROM zonas_riesgo WHERE (6371000 * ACOS(COS(RADIANS(?)) * COS(RADIANS(latitud)) * COS(RADIANS(longitud) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(latitud)))) <= radio_metros;
+
+RI-07: Actualización y Trazabilidad del Nivel de Riesgo (Tabla: historial_riesgo)
+SELECT h.id_historial, z.nombre_zona, h.nivel_riesgo_anterior, h.nivel_riesgo_nuevo, h.motivo, h.fecha_actualizacion FROM historial_riesgo h INNER JOIN zonas_riesgo z ON h.id_zona = z.id_zona ORDER BY h.fecha_actualizacion DESC;
+
+RI-08: Registro Ciudadano de Incidentes de Inseguridad (Tabla: incidentes)
+SELECT i.id_incidente, u.nombre AS usuario_reportante, i.tipo_incidente, i.descripcion, i.ubicacion, i.latitud, i.longitud, i.fecha_reporte, i.estado FROM incidentes i INNER JOIN usuarios u ON i.id_usuario = u.id_usuario WHERE i.estado = 'pendiente' ORDER BY i.fecha_reporte DESC;
+SELECT id_incidente, tipo_incidente, descripcion, latitud, longitud, ubicacion, fecha_reporte FROM incidentes WHERE estado = 'aprobado' ORDER BY fecha_reporte DESC;
+
+RI-09: Verificación y Publicación Oficial de Reportes (Tabla: reportes)
+SELECT r.id_reporte, i.tipo_incidente, i.descripcion, i.latitud, i.longitud, i.ubicacion, r.fecha_publicacion FROM reportes r INNER JOIN incidentes i ON r.id_incidente = i.id_incidente WHERE r.estado = 'publicado' ORDER BY r.fecha_publicacion DESC;
+
+RI-10: Alertas Preventivas en Tiempo Real (Tabla: alertas)
+SELECT id_alerta, tipo_alerta, descripcion, fecha_alerta, estado FROM alertas WHERE id_usuario = ? AND estado != 'descartada' ORDER BY fecha_alerta DESC;
+
+RI-11: Configuración de Preferencias de Notificación (Tabla: preferencias_alertas)
+SELECT id_preferencia, tipo_alerta, estado FROM preferencias_alertas WHERE id_usuario = ?;
+
+RI-12: Gestión de Contactos de Confianza y Red de Emergencia (Tabla: contactos_confianza)
+SELECT id_contacto, nombre_contacto, telefono, relacion FROM contactos_confianza WHERE id_usuario = ?;
+
+RI-13: Monitoreo y Compartir Ubicación en Tiempo Real (Tabla: ubicaciones_compartidas)
+SELECT uc.id_compartido, u.nombre AS emisor, c.nombre_contacto AS receptor, c.telefono, uc.fecha_inicio, uc.estado FROM ubicaciones_compartidas uc INNER JOIN usuarios u ON uc.id_usuario = u.id_usuario INNER JOIN contactos_confianza c ON uc.id_contacto = c.id_contacto WHERE uc.estado = 'activa';
+
+RI-14: Moderación y Auditoría de Reportes Ciudadanos (Tabla: moderacion_reportes)
+SELECT m.id_moderacion, i.tipo_incidente, i.ubicacion, u.nombre AS moderador, m.estado_revision, m.observaciones, m.fecha_revision FROM moderacion_reportes m INNER JOIN incidentes i ON m.id_incidente = i.id_incidente INNER JOIN usuarios u ON m.id_moderador = u.id_usuario ORDER BY m.fecha_revision DESC;
+
+RI-15: Auditoría y Trazabilidad Técnica del Sistema (Tabla: auditoria)
+SELECT a.id_auditoria, COALESCE(u.correo, 'SISTEMA') AS ejecutado_por, a.accion, a.detalles, a.fecha_hora FROM auditoria a LEFT JOIN usuarios u ON a.id_usuario = u.id_usuario ORDER BY a.fecha_hora DESC;
+
+RI-16: Estadísticas, Métricas y Analítica de Seguridad (Tabla: estadisticas)
+SELECT tipo_incidente, COUNT(*) AS total_incidentes, MAX(fecha_reporte) AS ultimo_reporte FROM incidentes WHERE estado = 'aprobado' GROUP BY tipo_incidente ORDER BY total_incidentes DESC;
+SELECT CASE WHEN HOUR(fecha_reporte) BETWEEN 6 AND 11 THEN 'Mañana' WHEN HOUR(fecha_reporte) BETWEEN 12 AND 17 THEN 'Tarde' WHEN HOUR(fecha_reporte) BETWEEN 18 AND 23 THEN 'Noche' ELSE 'Madrugada' END AS franja_horaria, COUNT(*) AS total_incidentes FROM incidentes GROUP BY franja_horaria ORDER BY total_incidentes DESC;

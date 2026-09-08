@@ -39,7 +39,7 @@ Define la jerarquía de usuarios dentro del sistema.
 | Nombre del Campo | Tipo de Dato | Long. / Prec. | Nulo | Clave | Valor por Defecto | Descripción / Regla de Negocio |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `id_rol` | INT | Auto_Increment | NO | PK | N/A | Identificador único del rol. |
-| `nombre_rol` | VARCHAR | 50 | NO | UQ | N/A | Nombre del rol (ej: Administrador, Moderador, Usuario Ciudadano). |
+| `nombre_rol` | VARCHAR | 50 | NO | UQ | N/A | Nombre del rol (ej: Administrador, Moderador, Analista de Seguridad, Usuario Ciudadano). |
 | `descripcion` | TEXT | N/A | SI | Ninguna | NULL | Descripción detallada de las atribuciones del rol. |
 | `nivel_acceso` | INT | N/A | NO | Ninguna | 1 | Nivel de jerarquía (1=Básico, 2=Moderador, 3=Administrador). |
 
